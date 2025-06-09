@@ -66,10 +66,6 @@ def load_and_clean(filepath):
     df['log_winner_rank'] = np.log(df['winner_rank_points'].fillna(0) + 1)
     df['log_loser_rank'] = np.log(df['loser_rank_points'].fillna(0) + 1)
     
-    # 6. Final encoding and cleanup
-    # One-hot encode tourney_level and surface
-    df = pd.get_dummies(df, columns=['tourney_level'], prefix='level')
-    df = pd.get_dummies(df, columns=['surface'], prefix='surf')
     
     # Fill remaining NaNs
     for col in df.select_dtypes(include=[np.number]).columns:
