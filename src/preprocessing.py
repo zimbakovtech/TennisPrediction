@@ -1,45 +1,123 @@
+import warnings
+warnings.filterwarnings("ignore")
+
+import pandas as pd
+import numpy as np
+
 from sklearn.ensemble import RandomForestClassifier
-import os
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+from xgboost import XGBClassifier
+
 
 def process_y():
-    dataset = []
+    # balanced 1/0 labels, length = 15710 * 2 = 31420
+    return np.array([1, 0] * 15710)
 
-    for i in range(15710):
-        dataset.append(1)
-        dataset.append(0)
-    
-    return dataset
 
 def read_file():
-    with open("data/processed/all_matches.csv", 'r') as file:
-        lines = file.readlines()
-        lines = [line.strip() for line in lines if line.strip()]
-    # Skip header and convert each line to a list of floats
-    data = []
-    for line in lines[1:]:
-        values = line.split(',')
-        float_values = [float(v) for v in values]
-        data.append(float_values)
-    return data
+    # fast CSV → numpy array
+    df = pd.read_csv("data/processed/all_matches.csv")
+    return df.values
+
+
+def tuned_classifiers(X_train, y_train):
+    results = {}
+
+    # --- Random Forest (CPU only) ---
+    rf = RandomForestClassifier(random_state=42, n_jobs=2)
+    rf_params = {
+        'n_estimators': [100, 200],
+        'max_depth': [None, 12],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 3],
+    }
+    print("Tuning Random Forest (RandomizedSearchCV, n_iter=5, cv=3)…")
+    rf_search = RandomizedSearchCV(
+        estimator=rf,
+        param_distributions=rf_params,
+        n_iter=5,
+        scoring='accuracy',
+        cv=3,
+        n_jobs=2,
+        random_state=42,
+        verbose=1
+    )
+    rf_search.fit(X_train, y_train)
+    results['RandomForest'] = rf_search
+
+    # --- XGBoost (CPU implementation) ---
+    xgb = XGBClassifier(
+        eval_metric='logloss',
+        random_state=42,
+        verbosity=0,
+        n_jobs=2,
+        tree_method='hist'     # hist = fast CPU algorithm
+    )
+    xgb_params = {
+        'n_estimators': [100, 150],
+        'max_depth': [3, 5],
+        'learning_rate': [0.05, 0.1],
+        'subsample': [0.7, 1.0],
+    }
+    print("Tuning XGBoost (RandomizedSearchCV, n_iter=5, cv=3)…")
+    xgb_search = RandomizedSearchCV(
+        estimator=xgb,
+        param_distributions=xgb_params,
+        n_iter=5,
+        scoring='accuracy',
+        cv=3,
+        n_jobs=2,
+        random_state=42,
+        verbose=1
+    )
+    xgb_search.fit(X_train, y_train)
+    results['XGBoost'] = xgb_search
+
+    return results
+
+
+def evaluate_models(models, X_test, y_test):
+    for name, search in models.items():
+        best = search.best_estimator_
+        y_pred = best.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        print(f"\n=== {name} Results ===")
+        print(f"Best Params: {search.best_params_}")
+        print(f"Test Accuracy: {acc * 100:.2f}%")
+        print(classification_report(y_test, y_pred))
+        print("Confusion Matrix:")
+        print(confusion_matrix(y_test, y_pred))
 
 
 if __name__ == "__main__":
-    dataset_y = process_y()
-    dataset_x = read_file()
+    # Load data
+    X = read_file()
+    y = process_y()
 
-    
+    # Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
+    )
 
-    threshold = int(len(dataset_x) * 0.8)
+    # Hyperparameter tuning
+    tuned = tuned_classifiers(X_train, y_train)
 
-    train_x, test_x = dataset_x[:threshold], dataset_x[threshold:]
-    train_y, test_y = dataset_y[:threshold], dataset_y[threshold:]
+    # Evaluation
+    evaluate_models(tuned, X_test, y_test)
 
-    random_forest = RandomForestClassifier(n_estimators=100, random_state=42)
-
-    random_forest.fit(train_x, train_y)
-    accuracy = random_forest.score(test_x, test_y)
-
-    print(f"Accuracy: {accuracy * 100:.2f}%")
-
-
-
+    # Quick CV summary
+    print("\nCross-validation scores for each best estimator:")
+    for name, search in tuned.items():
+        scores = cross_val_score(
+            search.best_estimator_,
+            X, y,
+            cv=3,
+            scoring='accuracy',
+            n_jobs=2
+        )
+        print(f"{name}: Mean={np.mean(scores)*100:.1f}%, Std={np.std(scores)*100:.1f}%")
