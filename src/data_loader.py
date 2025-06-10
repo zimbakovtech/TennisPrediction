@@ -30,6 +30,18 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
     # 1. Read the CSV file
     df = pd.read_csv(filepath)
 
+    # Encode round
+    df['round'] = (
+        df['round']
+        .map({'R128':1,'R64':2,'R32':3,'R16':4,'QF':5,'SF':6,'F':7,'RR':3, 'BR': 6})
+        .fillna(0).astype(int)
+    )
+
+    df['group'] = (df['round'] > df['round'].shift(1)).cumsum()
+    df = df.sort_values(by=['group', 'round'], ascending=[True, True])
+    df = df.drop('group', axis=1)
+    df = df.reset_index(drop=True)
+
     # 2. Drop unnecessary columns
     drop_cols = [
         'tourney_id', 'tourney_name', 'match_num', 'player_name', 
@@ -51,13 +63,6 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
     df['tourney_level'] = (
         df['tourney_level']
         .map({'D':1,'A':2,'M':3,'F':4,'O':5,'G':6})
-        .fillna(0).astype(int)
-    )
-
-    # 5. Encode round
-    df['round'] = (
-        df['round']
-        .map({'R128':1,'R64':2,'R32':3,'R16':4,'QF':5,'SF':6,'F':7,'RR':3})
         .fillna(0).astype(int)
     )
 
