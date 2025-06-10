@@ -20,33 +20,33 @@ tourney_date
 match_num
 - a match-specific identifier. Often starting from 1, sometimes counting down from 300, and sometimes arbitrary. 
 
-winner_id
-- the player_id used in this repo for the winner of the match
+player_id
+- the player_id used in this repo for the player of the match
 
-winner_seed
-winner_entry
-- 'WC' = wild card, 'Q' = qualifier, 'LL' = lucky loser, 'PR' = protected ranking, 'ITF' = ITF entry, and there are a few others that are occasionally used.
+player_seed
+player_entry
+- 'WC' = wild card, 'Q' = qualifier, 'LL' = lucky opponent, 'PR' = protected ranking, 'ITF' = ITF entry, and there are a few others that are occasionally used.
 
-winner_name
-winner_hand
+player_name
+player_hand
 - R = right, L = left, U = unknown. For ambidextrous players, this is their serving hand.
-winner_ht
+player_ht
 - height in centimeters, where available
 
-winner_ioc
+player_ioc
 - three-character country code
 
-winner_age
+player_age
 - age, in years, as of the tourney_date
 
-loser_id
-loser_seed
-loser_entry
-loser_name
-loser_hand
-loser_ht
-loser_ioc
-loser_age
+opponent_id
+opponent_seed
+opponent_entry
+opponent_name
+opponent_hand
+opponent_ht
+opponent_ioc
+opponent_age
 score
 best_of
 - '3' or '5', indicating the the number of sets for this match
@@ -56,23 +56,23 @@ minutes
 - match length, where available
 
 w_ace
-- winner's number of aces
+- player's number of aces
 w_df
-- winner's number of doubles faults
+- player's number of doubles faults
 w_svpt
-- winner's number of serve points
+- player's number of serve points
 w_1stIn
-- winner's number of first serves made
+- player's number of first serves made
 w_1stWon
-- winner's number of first-serve points won
+- player's number of first-serve points won
 w_2ndWon
-- winner's number of second-serve points won
+- player's number of second-serve points won
 w_SvGms
-- winner's number of serve games
+- player's number of serve games
 w_bpSaved
-- winner's number of break points saved
+- player's number of break points saved
 w_bpFaced
-- winner's number of break points faced
+- player's number of break points faced
 
 l_ace
 l_df
@@ -84,18 +84,18 @@ l_SvGms
 l_bpSaved
 l_bpFaced
 
-winner_rank
-- winner's ATP or WTA rank, as of the tourney_date, or the most recent ranking date before the tourney_date
-winner_rank_points
+player_rank
+- player's ATP or WTA rank, as of the tourney_date, or the most recent ranking date before the tourney_date
+player_rank_points
 - number of ranking points, where available
-loser_rank
-loser_rank_points
+opponent_rank
+opponent_rank_points
 
 * _doubles_ files notes
 
 The matches_doubles files have similar columns, though not all in the same order.
 
-The identifying information for each player refers to 'winner1', 'winner2', 'loser1', and 'loser2'. The labels 1 and 2 are not assigned for any particular reason.
+The identifying information for each player refers to 'player1', 'player2', 'opponent1', and 'opponent2'. The labels 1 and 2 are not assigned for any particular reason.
 
 In general, the tournament IDs for doubles results are the same as for singles results (so, for instance, you can see which players entered both draws at the same event), though this is not guaranteed for every single tournament, since some of the data came from different sources.
 
