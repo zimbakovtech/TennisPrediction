@@ -12,6 +12,10 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
         ('player_age', 'opponent_age'),
         ('player_rank', 'opponent_rank'),
         ('player_rank_points', 'opponent_rank_points'),
+        ('log_player_rank', 'log_opponent_rank'),
+        ('player_hand', 'opponent_hand'),
+        ('player_ht', 'opponent_ht'),
+        ('player_id', 'opponent_id')
     ]
     for a, b in swap_cols:
         mirrored[[a, b]] = mirrored[[b, a]]
@@ -28,10 +32,9 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
 
     # 2. Drop unnecessary columns
     drop_cols = [
-        'tourney_id', 'tourney_name', 'match_num', 'player_name', 'player_id',
-        'opponent_id', 'opponent_name', 'player_entry', 'opponent_entry',
-        'score', 'player_ioc', 'opponent_ioc', 'player_hand', 'opponent_hand',
-        'player_ht', 'opponent_ht', 'best_of', 'minutes', 'tourney_date',
+        'tourney_id', 'tourney_name', 'match_num', 'player_name', 
+        'opponent_name', 'player_entry', 'opponent_entry',
+        'score', 'player_ioc', 'opponent_ioc', 'minutes', 'tourney_date',
         'w_SvGms','w_bpFaced','l_SvGms','l_bpFaced',
         # serve stats
         'w_1stIn', 'w_1stWon', 'w_2ndWon', 'w_svpt', 'l_1stIn', 'l_1stWon',
@@ -41,6 +44,8 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
 
     # 3. Encode surface columns
     df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2})
+    df['player_hand'] = df['player_hand'].map({'R': 0, 'L': 1})
+    df['opponent_hand'] = df['opponent_hand'].map({'R': 0, 'L': 1})
 
     # 4. Encode tourney level
     df['tourney_level'] = (
@@ -67,8 +72,8 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
     df['age_diff']    = abs(df['player_age']            - df['opponent_age']).round()
 
     # Log transforms for rank points
-    # df['log_player_rank']   = np.log1p(df['player_rank_points'].fillna(0))
-    # df['log_opponent_rank'] = np.log1p(df['opponent_rank_points'].fillna(0))
+    df['log_player_rank']   = np.log1p(df['player_rank_points'])
+    df['log_opponent_rank'] = np.log1p(df['opponent_rank_points'])
 
     # Drop rows missing critical numeric or categorical features
     df.dropna(subset=['surface', 'player_rank', 'opponent_rank', 'player_rank_points', 'opponent_rank_points'], inplace=True)

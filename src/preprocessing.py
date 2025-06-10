@@ -56,8 +56,8 @@ def tuned_classifiers(X_train, y_train):
         tree_method='hist'     # hist = fast CPU algorithm
     )
     xgb_params = {
-        'n_estimators': [100, 150],
-        'max_depth': [3, 5],
+        'n_estimators': [100, 200],
+        'max_depth': [12, 12],
         'learning_rate': [0.05, 0.1],
         'subsample': [0.7, 1.0],
     }
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         X, y,
         test_size=0.2,
         random_state=42,
-        stratify=y
+        shuffle=False
     )
 
     # Hyperparameter tuning
@@ -121,3 +121,12 @@ if __name__ == "__main__":
             n_jobs=2
         )
         print(f"{name}: Mean={np.mean(scores)*100:.1f}%, Std={np.std(scores)*100:.1f}%")
+
+    # # --- Random Forest ---
+    # classifier = RandomForestClassifier(n_estimators=200, criterion='gini', random_state=42)
+    # classifier.fit(X_train, y_train)
+    # y_pred = classifier.predict(X_test)
+    # acc = accuracy_score(y_test, y_pred)
+    # print(f"RANDOM FOREST FEATURE IMPORTANCES: {classifier.feature_importances_}")
+    # print(f"Accuracy single RF: {acc}")
+
