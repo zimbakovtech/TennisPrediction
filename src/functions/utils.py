@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def process_y():
-    return np.array([1, 0] * 15710)
+    return np.array([1,0] * 27175)
 
 
 def read_file():
