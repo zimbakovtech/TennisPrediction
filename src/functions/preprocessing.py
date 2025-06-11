@@ -45,13 +45,8 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     df['opponent_seed'] = df['opponent_seed'].fillna(0).astype(int)
 
     # --- 5. Compute absolute difference features ---
-    df['rank_diff'] = (df['player_rank'] - df['opponent_rank']).abs()
-    df['points_diff'] = (df['player_rank_points'] - df['opponent_rank_points']).abs()
-    df['seed_diff'] = (df['player_seed'] - df['opponent_seed']).abs()
-    df['age_diff'] = (df['player_age'] - df['opponent_age']).abs().round()
-
-    # --- 6. Log-transform rank points for modeling stability ---
-    # df['log_player_rank'] = np.log1p(df['player_rank_points'])
-    # df['log_opponent_rank'] = np.log1p(df['opponent_rank_points'])
+    df['rank_diff'] = df['player_rank'] - df['opponent_rank']
+    df['points_diff'] = df['player_rank_points'] - df['opponent_rank_points']
+    df['age_diff'] = (df['player_age'] - df['opponent_age']).round(2)
 
     return df
