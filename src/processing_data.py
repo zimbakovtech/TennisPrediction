@@ -5,6 +5,7 @@ import pandas as pd
 from functions.duplicate_entries import duplicate_entries
 from functions.preprocessing import load_and_preprocess
 from functions.generate_stats import generate_stats
+from functions.calculate_elo import calculate_elo
 
 
 # Configure logging for the module
@@ -21,7 +22,6 @@ DROP_COLUMNS = [
     'player_rank_points', 'opponent_rank_points', 'draw_size',
     'player_seed', 'opponent_seed', 'player_age', 'opponent_age',
     'player_hand', 'opponent_hand', 'player_ht', 'opponent_ht',
-    'player_id', 'opponent_id',
     
     'w_SvGms', 'w_bpFaced', 'l_SvGms', 'l_bpFaced',
     'w_1stIn', 'w_1stWon', 'w_2ndWon', 'w_svpt',
@@ -58,13 +58,19 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     # Mirror entries to simulate opponent perspective
     final_df = duplicate_entries(df)
 
+    # Add ELO
+    final_elo_df = calculate_elo(final_df)
+
+    # Remove player_id and opponent_id from dataset
+    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id'])
+
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Save to CSV
-    final_df.to_csv(output_path, index=False)
+    final_elo_df.to_csv(output_path, index=False)
     logger.info(
-        "Saved %d rows to %s", len(final_df), output_path
+        "Saved %d rows to %s", len(final_elo_df), output_path
     )
 
 

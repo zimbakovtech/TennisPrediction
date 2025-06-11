@@ -8,8 +8,10 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
         ('w_ace_avg', 'l_ace_avg'),
         ('w_df_avg', 'l_df_avg'),
         ('w_bpSaved_avg', 'l_bpSaved_avg'),
+        ('w_bpSavedPer', 'l_bpSavedPer'),
         ('w_1stPer', 'l_1stPer'),
         ('w_2ndPer', 'l_2ndPer'),
+        ('player_id', 'opponent_id')
     ]
 
     # 2. Create a mirrored copy of the DataFrame
