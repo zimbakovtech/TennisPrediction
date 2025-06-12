@@ -6,18 +6,22 @@ from functions import utils
 def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
     new_df = df.copy()
     y = utils.process_y()
-    print(len(new_df), len(y))
 
     # Step 2: Initialize ELO ratings for all players
     all_players = pd.concat([new_df['player_id'], new_df['opponent_id']]).unique()
-    elo_ratings = {player: 1000.0 for player in all_players}  # Start all players at 1000.0
+    elo_ratings = {player: 1000.0 for player in all_players}
+    match_counts = {player: 0 for player in all_players}
 
     # Step 3: Prepare lists to store ELO ratings before each match
     player_elo_before = []
     opponent_elo_before = []
 
     # Step 4: Set the K-factor
-    K = 32
+    K_max = 32
+    scale = 10
+    decay_threshold = 5
+    M = 5
+    initial_elo = 1000
 
     # Step 5: Process each match in chronological order
     for (index, row), label in zip(new_df.iterrows(), y):
@@ -33,6 +37,14 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
         # Store these ELO ratings in the lists
         player_elo_before.append(elo1)
         opponent_elo_before.append(elo2)
+
+        # Get current match counts
+        player_matches = match_counts[player]
+        opponent_matches = match_counts[opponent]
+
+        # Calculate variable K-factors based on matches played
+        K1 = K_max / (1 + player_matches / scale)
+        K2 = K_max / (1 + opponent_matches / scale)
         
         # Calculate expected scores
         # E1 is the expected score for player, based on the ELO difference
@@ -50,8 +62,16 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
             raise ValueError("Winner ID does not match either player ID")
         
         # Update ELO ratings using the formula: new_elo = old_elo + K * (actual - expected)
-        new_elo1 = round(elo1 + K * (S1 - E1), 5)
-        new_elo2 = round(elo2 + K * (S2 - E2), 5)
+        new_elo1 = elo1 + K_max * (S1 - E1)
+        new_elo2 = elo2 + K_max * (S2 - E2)
+
+        match_counts[player] += 1
+        match_counts[opponent] += 1
+        
+        if match_counts[player] < decay_threshold:
+            new_elo1 = (match_counts[player] * new_elo1 + M * initial_elo) / (match_counts[player] + M)
+        if match_counts[opponent] < decay_threshold:
+            new_elo2 = (match_counts[opponent] * new_elo2 + M * initial_elo) / (match_counts[opponent] + M)
         
         # Update the dictionary with the new ELO ratings
         if index % 2 == 1:
