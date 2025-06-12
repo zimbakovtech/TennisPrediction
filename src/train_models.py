@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from functions.utils import process_y, read_file
+from models.naive_bayes import NaiveBayes
 from models.decision_tree import DecisionTree
 from models.random_forest import RandomForest
 from models.xgboost import XGBoost
@@ -24,6 +25,9 @@ if __name__ == "__main__":
     X_test_scaled = scaler.transform(X_test)
 
     print("=== Training and Evaluating Models ===")
+
+    nb = NaiveBayes(X_train, y_train)
+    evaluate_model(nb, X_test, y_test, X_train, y_train, feature_names=feature_names)
 
     dt = DecisionTree(X_train, y_train)
     evaluate_model(dt, X_test, y_test, X_train, y_train, feature_names=feature_names)
