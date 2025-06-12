@@ -3,8 +3,8 @@ from xgboost import XGBClassifier
 
 def XGBoost(X_train, y_train):
     xgb_params = {
-        'n_estimators': 260,
-        'max_depth': 7,
+        'n_estimators': 560,
+        'max_depth': 5,
         'learning_rate': 0.01,
         'subsample': 0.7,
     }
@@ -14,8 +14,9 @@ def XGBoost(X_train, y_train):
         verbosity=0,
         n_jobs=2,
         tree_method='hist',
-        xgb_params=xgb_params
+        **xgb_params
     )
-    print("----- Training XGBoost -----")
+    print("\n----- Training XGBoost -----")
+    print(f"XGBoost parameters: {xgb_params}")
     xgb.fit(X_train, y_train)
     return xgb

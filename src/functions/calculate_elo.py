@@ -50,8 +50,8 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
             raise ValueError("Winner ID does not match either player ID")
         
         # Update ELO ratings using the formula: new_elo = old_elo + K * (actual - expected)
-        new_elo1 = elo1 + K * (S1 - E1)
-        new_elo2 = elo2 + K * (S2 - E2)
+        new_elo1 = round(elo1 + K * (S1 - E1), 5)
+        new_elo2 = round(elo2 + K * (S2 - E2), 5)
         
         # Update the dictionary with the new ELO ratings
         if index % 2 == 1:
