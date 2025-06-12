@@ -2,19 +2,27 @@ from sklearn.metrics import accuracy_score, precision_score
 import numpy as np
 
 
-def evaluate_model(model, X_test, y_test, is_keras=False):
+def evaluate_model(model, X_test, y_test, X_train, y_train, is_keras=False):
     if is_keras:
-        loss, acc = model.evaluate(X_test, y_test, verbose=0)
-        y_pred = (model.predict(X_test) > 0.5).astype(int)
-        prec = precision_score(y_test, y_pred)
+        test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
+        train_loss, train_acc = model.evaluate(X_train, y_train, verbose=0)
+        test_pred = (model.predict(X_test) > 0.5).astype(int)
+        train_pred = (model.predict(X_train) > 0.5).astype(int)
+        test_prec = precision_score(y_test, test_pred)
+        train_prec = precision_score(y_train, train_pred)
     else:
-        y_pred = model.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred)
+        test_pred = model.predict(X_test)
+        train_pred = model.predict(X_train)
+        test_acc = accuracy_score(y_test, test_pred)
+        train_acc = accuracy_score(y_train, model.predict(X_train))
+        test_prec = precision_score(y_test, test_pred)
+        train_prec = precision_score(y_train, train_pred)
 
     print(f"\n=== Results ===")
-    print(f"Test Accuracy: {acc * 100:.2f}%")
-    print(f"Test Precision: {prec * 100:.2f}%")
+    print(f"Test Accuracy: {test_acc * 100:.2f}%")
+    print(f"Train Accuracy: {train_acc * 100:.2f}%")
+    print(f"Test Precision: {test_prec * 100:.2f}%")
+    print(f"Train Precision: {train_prec * 100:.2f}%")
 
 
 def print_feature_importances(model, feature_names):

@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
-        test_size=0.2,
+        test_size=0.3,
         random_state=42,
         shuffle=False
     )
@@ -22,10 +22,10 @@ if __name__ == "__main__":
     X_test_scaled = scaler.transform(X_test)
 
     xgb = XGBoost(X_train, y_train)
-    evaluate_model(xgb, X_test, y_test)
+    evaluate_model(xgb, X_test, y_test, X_train, y_train)
     print_feature_importances(xgb, feature_names)
 
     nn = NeuralNetwork(X_train_scaled, y_train, X_train_scaled.shape[1])
-    evaluate_model(nn, X_test_scaled, y_test, is_keras=True)
+    evaluate_model(nn, X_test_scaled, y_test, X_train_scaled, y_train, is_keras=True)
     print("\nNeural Network Summary:")
     nn.summary()
