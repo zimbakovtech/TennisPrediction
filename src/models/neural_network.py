@@ -28,7 +28,7 @@ def NeuralNetwork(X_train, y_train, input_dim):
         restore_best_weights=True
     )
 
-    print("----- Training Neural Network -----")
+    print("\n----- Training Neural Network -----")
     model.fit(
         X_train, y_train,
         epochs=100,

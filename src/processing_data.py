@@ -5,6 +5,7 @@ import pandas as pd
 from functions.duplicate_entries import duplicate_entries
 from functions.preprocessing import load_and_preprocess
 from functions.generate_stats import generate_stats
+from functions.calculate_elo import calculate_elo
 
 
 # Configure logging for the module
@@ -16,32 +17,23 @@ logger = logging.getLogger(__name__)
 
 DROP_COLUMNS = [
     'tourney_id', 'tourney_name', 'match_num', 'player_name', 'opponent_name',
-    'player_entry', 'opponent_entry', 'score', 'player_ioc', 'opponent_ioc',
-    'minutes', 'tourney_date',  'player_rank', 'opponent_rank', 
-    'player_rank_points', 'opponent_rank_points', 'draw_size',
-    'player_seed', 'opponent_seed', 'player_age', 'opponent_age',
-    'player_hand', 'opponent_hand', 'player_ht', 'opponent_ht',
-    'player_id', 'opponent_id',
+    'player_entry', 'opponent_entry', 'score', 'player_ioc', 'opponent_ioc', 'opponent_ht',
+    'player_seed', 'opponent_seed', 'player_age', 'opponent_age', 'draw_size',
+    'minutes', 'tourney_date', 'player_hand', 'opponent_hand', 'player_rank',
+    'player_rank_points', 'opponent_rank_points', 'opponent_rank', 'player_ht', 
     
-    'w_SvGms', 'w_bpFaced', 'l_SvGms', 'l_bpFaced',
-    'w_1stIn', 'w_1stWon', 'w_2ndWon', 'w_svpt',
-    'l_1stIn', 'l_1stWon', 'l_2ndWon', 'l_svpt',
-    'w_ace', 'l_ace', 'w_df', 'l_df', 'w_bpSaved', 'l_bpSaved',
-    'w_1stIn_avg', 'l_1stIn_avg', 'w_1stWon_avg', 'l_1stWon_avg', 
-    'w_2ndWon_avg', 'l_2ndWon_avg','w_bpFaced_avg', 'l_bpFaced_avg', 
-    'w_svpt_avg', 'l_svpt_avg',
+    'w_SvGms', 'w_bpFaced', 'l_SvGms', 'l_bpFaced', 'w_1stIn', 'w_1stWon', 
+    'w_2ndWon', 'w_svpt', 'l_1stIn', 'l_1stWon', 'l_2ndWon', 'l_ace_avg',
+    'w_ace', 'l_ace', 'w_df', 'l_df', 'l_bpSaved_avg','w_bpSaved_avg',
+    'w_bpSaved', 'l_bpSaved', 'w_df_avg', 'l_df_avg','l_svpt', 'w_ace_avg'
 ]
 
-AVG_COLUMNS = [
-    'w_ace_avg', 'l_ace_avg', 'w_df_avg', 'l_df_avg', 
-    'w_bpSaved_avg', 'l_bpSaved_avg',
-]
+FILL_COLUMNS = [ 'ace_diff', 'df_diff', 'bp_diff']
 
 KEY_FEATURES = [
     'surface', 'player_rank', 'opponent_rank',
-    'player_rank_points', 'opponent_rank_points',
+    'player_rank_points', 'opponent_rank_points'
 ]
-
 
 def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     # Remove rows missing key features
@@ -52,20 +44,24 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     df = df.drop(columns=cols_to_drop)
 
     # Ensure average columns exist and fill missing values
-    for col in AVG_COLUMNS:
+    for col in FILL_COLUMNS:
         df[col] = df.get(col, 0).fillna(0)
 
     # Mirror entries to simulate opponent perspective
     final_df = duplicate_entries(df)
 
+    # Add ELO
+    final_elo_df = calculate_elo(final_df)
+
+    # Remove player_id and opponent_id from dataset
+    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id'])
+
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Save to CSV
-    final_df.to_csv(output_path, index=False)
-    logger.info(
-        "Saved %d rows to %s", len(final_df), output_path
-    )
+    final_elo_df.to_csv(output_path, index=False)
+    logger.info("Saved %d rows to %s", len(final_elo_df), output_path)
 
 
 def process_all(data_dir: Path, output_path: Path) -> None:
@@ -93,16 +89,6 @@ def process_all(data_dir: Path, output_path: Path) -> None:
         len(combined_df)
     )
     averaged_df = generate_stats(combined_df)
-
-    # Fill NaN values in the specified columns with 0
-    columns_to_fill = [
-        'w_1stIn_avg', 'l_1stIn_avg', 'w_1stWon_avg', 'l_1stWon_avg',
-        'w_2ndWon_avg', 'l_2ndWon_avg', 'w_bpFaced_avg', 'l_bpFaced_avg',
-        'w_svpt_avg', 'l_svpt_avg', 'w_bpSavedPer', 'l_bpSavedPer',
-        'w_1stPer', 'l_1stPer', 'w_2ndPer', 'l_2ndPer'
-    ]
-    for col in columns_to_fill:
-        averaged_df[col] = averaged_df.get(col, 0).fillna(0)
 
     # Postprocess and save results
     postprocess_and_save(averaged_df, output_path)
