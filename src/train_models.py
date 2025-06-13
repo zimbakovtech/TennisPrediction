@@ -5,6 +5,8 @@ from models.naive_bayes import NaiveBayes
 from models.decision_tree import DecisionTree
 from models.random_forest import RandomForest
 from models.xgboost import XGBoost
+from models.light_gbm import LightGBM
+from models.catboost import CatBoost
 from models.neural_network import NeuralNetwork
 from model_evaluations import evaluate_model
 
@@ -38,6 +40,12 @@ if __name__ == "__main__":
 
     xgb = XGBoost(X_train, y_train)
     evaluate_model(xgb, X_test, y_test, X_train, y_train, feature_names=feature_names)
+
+    catboost = CatBoost(X_train, y_train)
+    evaluate_model(catboost, X_test, y_test, X_train, y_train, feature_names=feature_names)
+
+    lgm = LightGBM(X_train, y_train)
+    evaluate_model(lgm, X_test, y_test, X_train, y_train, feature_names=feature_names)
 
     nn = NeuralNetwork(X_train_scaled, y_train, X_train_scaled.shape[1])
     evaluate_model(nn, X_test_scaled, y_test, X_train_scaled, y_train, is_keras=True, feature_names=feature_names)

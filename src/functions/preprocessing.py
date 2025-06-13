@@ -19,7 +19,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     )
 
     # --- 2. Sort matches within each tournament ---
-    df['match_group'] = (df['round'] > df['round'].shift()).cumsum()
+    df['match_group'] = (df['round'] < df['round'].shift(1, fill_value=float('inf'))).cumsum()
     df = (
         df
         .sort_values(['match_group', 'round'])
@@ -48,5 +48,6 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     df['rank_diff'] = df['player_rank'] - df['opponent_rank']
     df['points_diff'] = df['player_rank_points'] - df['opponent_rank_points']
     df['age_diff'] = (df['player_age'] - df['opponent_age']).round(2)
+    df['win_loss'] = 1
 
     return df
