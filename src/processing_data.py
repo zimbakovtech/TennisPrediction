@@ -4,8 +4,9 @@ from typing import List
 import pandas as pd
 from functions.duplicate_entries import duplicate_entries
 from functions.preprocessing import load_and_preprocess
-from functions.generate_stats import generate_stats
-from functions.calculate_elo import calculate_elo
+from feature_engineering.generate_stats import generate_stats
+from feature_engineering.calculate_elo import calculate_elo
+from feature_engineering.head2head import add_h2h_stats
 
 
 # Configure logging for the module
@@ -90,8 +91,10 @@ def process_all(data_dir: Path, output_path: Path) -> None:
     )
     averaged_df = generate_stats(combined_df)
 
+    h2h_df = add_h2h_stats(averaged_df)
+
     # Postprocess and save results
-    postprocess_and_save(averaged_df, output_path)
+    postprocess_and_save(h2h_df, output_path)
 
 
 if __name__ == '__main__':
