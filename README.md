@@ -58,20 +58,29 @@ TennisPrediction/
 │
 ├── src/
 │   ├── feature_engineering/     # Elo, statistics, head‑to‑head
+│   │   ├── calculate_elo.py
+│   │   ├── generate_stats.py
+│   │   └── head2head.py
+│   │
 │   ├── functions/               # Preprocessing and utilities
+│   │   ├── duplicate_entries.py
+│   │   ├── preprocessing.py
+│   │   └── utils.py
+│   │
 │   ├── models/                  # Model definitions
+│   │   ├── catboost.py
+│   │   ├── decision_tree.py
+│   │   ├── light_gbm.py
+│   │   ├── naive_bayes.py
+│   │   ├── neural_network.py
+│   │   ├── random_forest.py
+│   │   └── xgboost.py
+│   │
 │   ├── model_evaluations.py     # Evaluation routines
 │   ├── processing_data.py       # Data pipeline
 │   └── train_models.py          # Training scripts
 │
-├── models/                      
-│   ├── catboost.py
-│   ├── decision_tree.py
-│   ├── light_gbm.py
-│   ├── naive_bayes.py
-│   ├── neural_network.py
-│   ├── random_forest.py
-│   └── xgboost.py
+├── 
 │
 ├── requirements.txt
 ├── README.md
