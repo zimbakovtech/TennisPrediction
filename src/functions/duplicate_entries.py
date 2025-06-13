@@ -21,6 +21,8 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
         if col in mirrored.columns:
             mirrored[col] = -mirrored[col]
 
+    mirrored['win_loss'] = 1 - mirrored['win_loss']
+
     # 5. Interleave original and mirrored entries
     n = len(df)
     df.index = np.arange(0, 2 * n, 2)

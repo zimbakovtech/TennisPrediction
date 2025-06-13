@@ -18,7 +18,6 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
 
     # Step 4: Set the K-factor
     K_max = 32
-    scale = 10
     decay_threshold = 5
     M = 5
     initial_elo = 1000
@@ -38,14 +37,6 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
         player_elo_before.append(elo1)
         opponent_elo_before.append(elo2)
 
-        # Get current match counts
-        player_matches = match_counts[player]
-        opponent_matches = match_counts[opponent]
-
-        # Calculate variable K-factors based on matches played
-        K1 = K_max / (1 + player_matches / scale)
-        K2 = K_max / (1 + opponent_matches / scale)
-        
         # Calculate expected scores
         # E1 is the expected score for player, based on the ELO difference
         E1 = 1 / (1 + 10 ** ((elo2 - elo1) / 400))
