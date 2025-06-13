@@ -66,8 +66,8 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
         
         # Update the dictionary with the new ELO ratings
         if index % 2 == 1:
-            elo_ratings[player] = new_elo1
-            elo_ratings[opponent] = new_elo2
+            elo_ratings[player] = round(new_elo1, 5)
+            elo_ratings[opponent] = round(new_elo2, 5)
 
     # Step 6: Add the ELO ratings to the DataFrame
     new_df['player_elo_before'] = player_elo_before

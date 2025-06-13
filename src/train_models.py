@@ -37,7 +37,6 @@ if __name__ == "__main__":
     rf = RandomForest(X_train, y_train)
     evaluate_model(rf, X_test, y_test, X_train, y_train, feature_names=feature_names)
     
-
     xgb = XGBoost(X_train, y_train)
     evaluate_model(xgb, X_test, y_test, X_train, y_train, feature_names=feature_names)
 
