@@ -218,3 +218,10 @@ This summary highlights the principal data transformations, modeling strategies,
 
 *Prepared by Damjan Zimbakov & Andrej Milevski*  
 *June 2025*  
+
+---
+
+## License
+
+This project is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for details.
