@@ -22,13 +22,13 @@ Predict ATP tennis match outcomes with advanced machine learning on 2015–2024 
 
 ---
 
-## 🔍 Overview
+## Overview
 
 This project builds, trains, and evaluates multiple classifiers to predict the winners of ATP tennis matches. Based on Jeff Sackmann’s publicly available match data from 2015 to 2024, we engineer rich features—Elo ratings, head‑to‑head stats, recent form metrics—and compare model performances.
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Data Ingestion & Cleaning**  
   Load and combine raw CSVs, filter for main‑draw matches, normalize surfaces, and handle missing entries.
@@ -54,7 +54,7 @@ This project builds, trains, and evaluates multiple classifiers to predict the w
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 TennisPrediction/
@@ -77,7 +77,7 @@ TennisPrediction/
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 1. **Clone the repo**  
    ```bash
@@ -99,7 +99,7 @@ TennisPrediction/
 
 ---
 
-## 🗄️ Data Preparation
+## Data Preparation
 
 1. **Process Data**  
    Run `processing_data.py` to recreate `all_matches.csv`. This script will:
@@ -112,7 +112,7 @@ TennisPrediction/
 
 ---
 
-## 🏋️‍♂️ Training & Evaluation
+## Training & Evaluation
 
 Train and evaluate models with a 70/30 train-test split:
 ```bash
@@ -125,7 +125,7 @@ Outputs:
 
 ---
 
-## 📊 Results & Metrics
+## Results & Metrics
 
 **XGBoost** achieved the best test accuracy of **66.34%** (67.77% train)  
 A concise comparison:
@@ -164,7 +164,7 @@ Below are the relative importances (as percentages) for the XGBoost model:
 
 ---
 
-## 📅 Future Work
+## Future Work
 
 - Develop a REST API (Flask/FastAPI) for live predictions  
 - Build a web dashboard with React or static HTML  
@@ -214,7 +214,7 @@ This summary highlights the principal data transformations, modeling strategies,
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.  
 See the [LICENSE](LICENSE) file for details.
