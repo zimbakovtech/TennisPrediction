@@ -1,117 +1,105 @@
-# Tennis Match Prediction
+# 🎾 Tennis Match Prediction
 
-Predict ATP tennis match outcomes using machine learning on 2015–2024 data.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
+[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 
----
-
-## Overview
-
-This repository contains code and data pipelines to build, train, and evaluate models that predict the winner of ATP tennis matches. We use Jeff Sackmann’s publicly available match data (2015–2024), engineer features (Elo ratings, head‑to‑head, recent form, etc.), and compare several classifiers (Decision Tree, Random Forest, XGBoost, Neural Network).
+Predict ATP tennis match outcomes with advanced machine learning on 2015–2024 data.
 
 ---
 
-## Features
+## 📋 Table of Contents
+
+1. [Overview](#overview)  
+2. [Features](#features)  
+3. [Repository Structure](#repository-structure)  
+4. [Installation & Setup](#installation--setup)  
+5. [Data Preparation](#data-preparation)  
+6. [Training & Evaluation](#training--evaluation)  
+7. [Results & Metrics](#results--metrics)  
+8. [Feature Importances](#feature-importances)  
+9. [Future Work](#future-work)  
+10. [License](#license)
+
+---
+
+## 🔍 Overview
+
+This project builds, trains, and evaluates multiple classifiers to predict the winners of ATP tennis matches. Based on Jeff Sackmann’s publicly available match data from 2015 to 2024, we engineer rich features—Elo ratings, head‑to‑head stats, recent form metrics—and compare model performances.
+
+---
+
+## 🚀 Features
 
 - **Data Ingestion & Cleaning**  
-  Load raw CSVs (2015–2024), filter main‑draw matches, standardize surfaces, and handle missing values.
+  Load and combine raw CSVs, filter for main‑draw matches, normalize surfaces, and handle missing entries.
 
 - **Feature Engineering**  
-  - Global and surface‑specific Elo ratings  
-  - Head‑to‑head counts  
-  - Recent‑form metrics (last N matches)  
-  - Ranking and rank‑points differences  
-  - Tournament importance and round encoding
+  - **Elo Ratings**: Global & surface‑specific, updated pre‑match with K = 32  
+  - **Head‑to‑Head**: Win–loss differential for player rivalries  
+  - **Recent Form**: Rolling statistics over last N matches (aces, double faults, break points saved)  
+  - **Ranking Metrics**: Differences in ATP rank and ranking points  
+  - **Tournament Encoding**: Importance level and round information  
 
-- **Modeling**  
-  - Naive Bayes
-  - Decision Tree 
+- **Modeling Suite**  
+  - Naive Bayes  
+  - Decision Tree  
   - Random Forest  
-  - XGBoost  
-  - CatBoost
-  - LightGBM
-  - Neural Network
+  - XGBoost (top performer)  
+  - CatBoost  
+  - LightGBM  
+  - Neural Network  
 
-- **Evaluation**  
-  Accuracy, AUC‑ROC, confusion matrix, feature importance.
-
-- **Prediction**  
-  Script to load a trained model and predict match outcome given two player IDs, surface, and date.
+- **Evaluation Tools**  
+  Calculate accuracy, confusion matrices, and feature importances.
 
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 
 ```
 TennisPrediction/
 ├── data/
-│   ├── players/                 # Player Elo ratings
-│   │   └── player_elo_ratings.csv
-│   ├── processed/               # Engineered and cleaned datasets
-│   │   ├── all_matches.csv
-│   │   ├── all_matches_pre_engineering.csv
-│   │   └── all_matches_elo.csv
-│   └── raw/                     # Original Jeff Sackmann match CSVs
-│       ├── atp_matches_2015.csv
-│       ├── atp_matches_2016.csv
-│       ├── …
-│       └── atp_matches_2024.csv
+│   ├── raw/                 # Raw match CSVs (2015–2024)
+│   ├── processed/           # Cleaned & engineered datasets
+│   └── players/             # Precomputed Elo ratings
 │
 ├── src/
-│   ├── feature_engineering/     # Elo, statistics, head‑to‑head
-│   │   ├── calculate_elo.py
-│   │   ├── generate_stats.py
-│   │   └── head2head.py
-│   │
-│   ├── functions/               # Preprocessing and utilities
-│   │   ├── duplicate_entries.py
-│   │   ├── preprocessing.py
-│   │   └── utils.py
-│   │
-│   ├── models/                  # Model definitions
-│   │   ├── catboost.py
-│   │   ├── decision_tree.py
-│   │   ├── light_gbm.py
-│   │   ├── naive_bayes.py
-│   │   ├── neural_network.py
-│   │   ├── random_forest.py
-│   │   └── xgboost.py
-│   │
-│   ├── model_evaluations.py     # Evaluation routines
-│   ├── processing_data.py       # Data pipeline
-│   └── train_models.py          # Training scripts
+│   ├── feature_engineering/ # Elo, stats, head2head
+│   ├── functions/           # Preprocessing utilities
+│   ├── models/              # Individual model definitions
+│   ├── train_models.py      # Training and evaluation pipeline
+│   └── processing_data.py   # Data preparation pipeline
 │
-├── 
-│
-├── requirements.txt
-├── README.md
-└── .gitignore
+├── requirements.txt  
+├── LICENSE  
+└── README.md
 ```
 
 ---
 
-## Setup & Installation
+## ⚙️ Installation & Setup
 
-1. **Clone the Repository**  
+1. **Clone the repo**  
    ```bash
    git clone https://github.com/zimbakovtech/TennisPrediction.git
    cd TennisPrediction
    ```
 
-2. **Install Dependencies**  
-   - Create and activate a virtual environment (recommended):  
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate        # Linux/macOS
-     # venv\Scripts\activate       # Windows
-     ```
-   - Install required packages:  
-     ```bash
-     pip install -r requirements.txt
-     ```
+2. **Create & activate a virtual environment**  
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate    # macOS/Linux
+   venv\Scripts\activate     # Windows
+   ```
+
+3. **Install dependencies**  
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
-## Data Preparation
+## 🗄️ Data Preparation
 
 1. **Process Data**  
    Run `processing_data.py` to recreate `all_matches.csv`. This script will:
@@ -124,23 +112,33 @@ TennisPrediction/
 
 ---
 
-## Training & Evaluating Models
+## 🏋️‍♂️ Training & Evaluation
 
-Run `train_models.py` to train and evaluate the following classifiers on a 70%/30% train/test split:
+Train and evaluate models with a 70/30 train-test split:
+```bash
+python src/train_models.py
+```
+Outputs:
+- Performance metrics for each classifier  
+- Confusion matrices and ROC curves  
+- Feature importance rankings
 
-### Test & Train Accuracies
+---
 
-| Model             | Test Accuracy | Train Accuracy |
-|-------------------|--------------:|---------------:|
-| Naive Bayes       |        64.54% |         65.29% |
-| Decision Tree     |        64.07% |         65.64% |
-| Random Forest     |        65.26% |         66.97% |
-| **XGBoost (best)**|   **66.30%**  |      **67.76%**|
-| CatBoost          |        65.63% |         66.26% |
-| LightGBM          |        66.11% |         68.12% |
-| Neural Network    |        65.72% |         66.36% |
+## 📊 Results & Metrics
 
-> **XGBoost achieved the highest test accuracy of 66.30%.**
+**XGBoost** achieved the best test accuracy of **66.34%** (67.77% train)  
+A concise comparison:
+
+| Model             | Test Acc. | Train Acc. |
+|-------------------|----------:|-----------:|
+| Naive Bayes       |    64.54% |     65.29% |
+| Decision Tree     |    64.07% |     65.64% |
+| Random Forest     |    65.26% |     66.97% |
+| **XGBoost**       | **66.34%**| **67.77%** |
+| CatBoost          |    65.63% |     66.26% |
+| LightGBM          |    66.11% |     68.12% |
+| Neural Network    |    65.72% |     66.36% |
 
 ---
 
@@ -166,13 +164,13 @@ Below are the relative importances (as percentages) for the XGBoost model:
 
 ---
 
-## Future Work
+## 📅 Future Work
 
-- Build a Flask/FastAPI REST API for live predictions.  
-- Develop a web dashboard (React or static HTML) for visualization.  
-- Automate weekly data updates as new match CSVs become available.  
-- Explore additional features (injury flags, travel distance, betting odds).  
-- Schedule periodic retraining to adapt to concept drift.
+- Develop a REST API (Flask/FastAPI) for live predictions  
+- Build a web dashboard with React or static HTML  
+- Automate weekly data ingestion  
+- Integrate new features (injury flags, travel distances)  
+- Implement periodic retraining to address concept drift
 
 ---
 
@@ -216,12 +214,12 @@ This summary highlights the principal data transformations, modeling strategies,
 
 ---
 
-*Prepared by Damjan Zimbakov & Andrej Milevski*  
-*June 2025*  
-
----
-
-## License
+## 📄 License
 
 This project is licensed under the MIT License.  
 See the [LICENSE](LICENSE) file for details.
+
+---
+
+*Prepared by Damjan Zimbakov & Andrej Milevski*  
+*June 2025*  
