@@ -45,7 +45,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     df['opponent_seed'] = df['opponent_seed'].fillna(0).astype(int)
 
     # --- 5. Compute absolute difference features ---
-    df['rank_diff'] = df['player_rank'] - df['opponent_rank']
+    df['rank_diff'] = -(df['player_rank'] - df['opponent_rank'])
     df['points_diff'] = (np.log1p(np.abs(df['player_rank_points'] - df['opponent_rank_points'])) * np.sign(df['player_rank_points'] - df['opponent_rank_points'])).round(4)
     df['age_diff'] = (df['player_age'] - df['opponent_age']).round(2)
     df['win_loss'] = 1
