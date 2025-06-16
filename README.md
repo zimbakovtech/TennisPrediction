@@ -176,5 +176,45 @@ Below are the relative importances (as percentages) for the XGBoost model:
 
 ---
 
+## Summary
+
+This project employs comprehensive data preparation and advanced feature engineering to predict ATP match outcomes with machine learning. Leveraging Jeff Sackmann’s publicly available match data (2015–2024), we have:
+
+- **Engineered Form Metrics**  
+  Computed rolling averages over each player’s last 10 matches for ace, double‑fault, and break‑point‑saved statistics, then combined these into three different features:  
+  - `ace_diff` (Ace Difference)  
+  - `df_diff` (Double‑Fault Difference)  
+  - `bp_diff` (Break‑Points‑Saved Difference)
+
+- **Head‑to‑Head Insights**  
+  Introduced `h2h_diff`, capturing the win–loss differential between any two players to inform the model of their historical rivalry.
+
+- **Dynamic Elo Ratings**  
+  Implemented a zero‑sum Elo update:  
+  ```
+  E₁ = 1 / (1 + 10^((elo₂ – elo₁) / 400)),  
+  new_elo₁ = elo₁ + K · (S₁ – E₁)
+  ```  
+  (and likewise for player 2), providing richer skill estimates than static ranking points.
+
+- **Class Balance via Row Mirroring**  
+  To avoid a one‑class (“Win”) target, every match row (A beats B) is mirrored: B vs. A with inverted feature signs or swapped values. This doubling ensures a balanced bidirectional dataset.
+
+- **Feature Selection & Overfitting Control**  
+  After experimenting with varying feature sets, we settled on 14 predictors. Hyperparameter tuning (number of estimators, tree depth, etc.) minimized overfitting, yielding only a 1.43 percentage‐point gap between train and test accuracy.
+
+- **Theoretical Accuracy Ceiling**  
+  Tennis match prediction is bounded by game unpredictability:  
+  - **Lower bound (random):** 50 %  
+  - **Upper bound (ideal statistical model):** ~70 %  
+  Mapping our best test accuracy (66.34 %) onto this 50–70 % range gives a scaled success score of **81.7 %**.
+
+- **Tournament‐Specific Performance**  
+  On the Australian Open 2025 (Rounds of 32 through Final), our top XGBoost model achieved **86.67 %** accuracy—surpassing the overall theoretical limit, likely due to a smaller field of elite competitors and more consistent play.
+
+This summary highlights the principal data transformations, modeling strategies, and performance benchmarks that underpin our ATP match‐prediction pipeline.
+
+---
+
 *Prepared by Damjan Zimbakov & Andrej Milevski*  
 *June 2025*  
