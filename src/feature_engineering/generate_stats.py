@@ -56,7 +56,7 @@ def generate_stats(df: pd.DataFrame, window: int = 10, lookback: int = 600) -> p
     df['w_bpSaved_avg'] = w_bpSaved_avgs
     df['l_bpSaved_avg'] = l_bpSaved_avgs
     df['ace_diff'] = (df['w_ace_avg'] - df['l_ace_avg']).round(5)
-    df['df_diff'] = (df['w_df_avg'] - df['l_df_avg']).round(5)
+    df['df_diff'] = -(df['w_df_avg'] - df['l_df_avg']).round(5)
     df['bp_diff'] = (df['w_bpSaved_avg'] - df['l_bpSaved_avg']).round(5)
 
     return df

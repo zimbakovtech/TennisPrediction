@@ -194,3 +194,14 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# VS Code workspace settings
+.vscode/
+
+# CatBoost training info
+catboost_info/
+
+# Saved neural‑net weights
+best_nn_model.h5
+
+.idea
