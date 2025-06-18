@@ -28,7 +28,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     )
 
     # --- 3. Encode categorical features ---
-    df['surface'] = df['surface'].map({'Hard': 1, 'Clay': 2, 'Grass': 3})
+    df['surface'] = df['surface'].map({'Hard': 1, 'Clay': 2, 'Grass': 3, 'Carpet': 4})
     df['player_hand'] = df['player_hand'].map({'R': 0, 'L': 1})
     df['opponent_hand'] = df['opponent_hand'].map({'R': 0, 'L': 1})
 
