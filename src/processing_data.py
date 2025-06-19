@@ -55,7 +55,7 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     # Add ELO
     final_elo_df = calculate_elo(final_df)
 
-    final_elo_df = final_elo_df[~final_elo_df['tourney_level'].isin([1])]
+    final_elo_df = final_elo_df[~final_elo_df['tourney_level'].isin([1, 2])]
 
 
     # Remove player_id and opponent_id from dataset
