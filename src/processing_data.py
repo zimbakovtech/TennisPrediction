@@ -21,8 +21,7 @@ DROP_COLUMNS = [
     'player_entry', 'opponent_entry', 'score', 'player_ioc', 'opponent_ioc', 'opponent_ht',
     'player_seed', 'opponent_seed', 'player_age', 'opponent_age', 'draw_size',
     'minutes', 'tourney_date', 'player_hand', 'opponent_hand', 'player_rank',
-    'player_rank_points', 'opponent_rank_points', 'opponent_rank', 'player_ht',
-    'round', 'best_of',
+    'player_rank_points', 'opponent_rank_points', 'opponent_rank', 'player_ht', 
     
     'w_SvGms', 'w_bpFaced', 'l_SvGms', 'l_bpFaced', 'w_1stIn', 'w_1stWon', 
     'w_2ndWon', 'w_svpt', 'l_1stIn', 'l_1stWon', 'l_2ndWon', 'l_ace_avg',
