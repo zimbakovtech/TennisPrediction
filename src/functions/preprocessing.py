@@ -14,7 +14,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     df['round'] = (
         df['round']
         .map(round_map)
-        .fillna(0)
+        .fillna(1)
         .astype(int)
     )
 
@@ -28,7 +28,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     )
 
     # --- 3. Encode categorical features ---
-    df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2})
+    df['surface'] = df['surface'].map({'Hard': 1, 'Clay': 2, 'Grass': 3})
     df['player_hand'] = df['player_hand'].map({'R': 0, 'L': 1})
     df['opponent_hand'] = df['opponent_hand'].map({'R': 0, 'L': 1})
 
@@ -36,9 +36,11 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     df['tourney_level'] = (
         df['tourney_level']
         .map(tourney_level_map)
-        .fillna(0)
+        .fillna(1)
         .astype(int)
-    )
+    ) 
+
+    df['event_importance'] = df['tourney_level'] * df['round'] * (df['best_of'] / 3)
 
     # --- 4. Fill missing seed values ---
     df['player_seed'] = df['player_seed'].fillna(0).astype(int)

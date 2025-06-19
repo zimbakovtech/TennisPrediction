@@ -21,7 +21,8 @@ DROP_COLUMNS = [
     'player_entry', 'opponent_entry', 'score', 'player_ioc', 'opponent_ioc', 'opponent_ht',
     'player_seed', 'opponent_seed', 'player_age', 'opponent_age', 'draw_size',
     'minutes', 'tourney_date', 'player_hand', 'opponent_hand', 'player_rank',
-    'player_rank_points', 'opponent_rank_points', 'opponent_rank', 'player_ht', 
+    'player_rank_points', 'opponent_rank_points', 'opponent_rank', 'player_ht',
+    'round', 'best_of',
     
     'w_SvGms', 'w_bpFaced', 'l_SvGms', 'l_bpFaced', 'w_1stIn', 'w_1stWon', 
     'w_2ndWon', 'w_svpt', 'l_1stIn', 'l_1stWon', 'l_2ndWon', 'l_ace_avg',
@@ -54,8 +55,11 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     # Add ELO
     final_elo_df = calculate_elo(final_df)
 
+    final_elo_df = final_elo_df[~final_elo_df['tourney_level'].isin([1])]
+
+
     # Remove player_id and opponent_id from dataset
-    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id'])
+    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id', 'surface', 'player_streak', 'opponent_streak', 'tourney_level'], errors='ignore')
 
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)

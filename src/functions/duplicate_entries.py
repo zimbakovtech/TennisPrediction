@@ -16,7 +16,7 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
         mirrored[[col_a, col_b]] = mirrored[[col_b, col_a]]
 
     # 4. Flip sign for difference columns in mirrored DataFrame
-    diff_cols = ['rank_diff', 'points_diff', 'seed_diff', 'age_diff', 'height_diff', 'ace_diff', 'df_diff', 'bp_diff', 'h2h_diff']
+    diff_cols = ['rank_diff', 'points_diff', 'seed_diff', 'age_diff', 'height_diff', 'ace_diff', 'df_diff', 'bp_diff', 'h2h_diff', 'streak_diff']
     for col in diff_cols:
         if col in mirrored.columns:
             mirrored[col] = -mirrored[col]
