@@ -9,6 +9,7 @@ from models.light_gbm import LightGBM
 from models.catboost import CatBoost
 from models.neural_network import NeuralNetwork
 from model_evaluations import evaluate_model
+import pandas as pd
 
 
 if __name__ == "__main__":
@@ -48,3 +49,13 @@ if __name__ == "__main__":
 
     nn = NeuralNetwork(X_train_scaled, y_train, X_train_scaled.shape[1])
     evaluate_model(nn, X_test_scaled, y_test, X_train_scaled, y_train, is_keras=True, feature_names=feature_names)
+
+    wimbledon_df = pd.read_csv("data/processed/wimbledon_2025_processed.csv")
+    X_wimbledon = wimbledon_df.drop(columns='win_loss').values
+    preds = xgb.predict(X_wimbledon)
+    preds = [2 if pred == 0 else 1 for pred in preds]
+    probs = xgb.predict_proba(X_wimbledon)
+    print("\n=== Predictions for Wimbledon 2025 ===")
+    print(preds)
+    print("\n=== Probabilities ===")
+    print(probs)

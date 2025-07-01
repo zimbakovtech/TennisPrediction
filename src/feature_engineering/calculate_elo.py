@@ -5,7 +5,7 @@ from functions import utils
 
 def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
     new_df = df.copy()
-    y = utils.process_y()
+    y = np.array([1, 0] * 27672).tolist()
 
     # Step 2: Initialize ELO ratings for all players
     all_players = pd.concat([new_df['player_id'], new_df['opponent_id']]).unique()
