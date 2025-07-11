@@ -111,3 +111,18 @@ best_of,round,surface,draw_size,tourney_level,player_id,player_name,player_age,p
 5,R32,Grass,128,G,208233,Mattia Bellucci,24.0,74,836,111815,Cameron Norrie,29.0,61,952
 5,R32,Grass,128,G,126094,Andrey Rublev,27.0,14,2920,105173,Adrian Mannarino,36.0,125,477
 5,R32,Grass,128,G,105526,Jan Lennard Struff,35.0,127,475,207989,Carlos Alcaraz,22.0,2,9300
+5,R16,Grass,128,G,206173,Jannik Sinner,23.0,1,10430,105777,Grigor Dimitrov,34.0,21,2155
+5,R16,Grass,128,G,210097,Ben Shelton,22.0,10,3170,132283,Lorenzo Sonego,30.0,48,1171
+5,R16,Grass,128,G,105227,Marin Cilic,36.0,85,722,207925,Flavio Cobolli,23.0,24,2060
+5,R16,Grass,128,G,200282,Alex De Minaur,26.0,11,3085,104925,Novak Djokovic,38.0,6,4630
+5,R16,Grass,128,G,126203,Taylor Fritz,27.0,5,4635,111442,Jordan Thompson,31.0,45,1200
+5,R16,Grass,128,G,111575,Karen Khachanov,29.0,19,2240,111794,Kamil Majchrzak,29.0,108,527
+5,R16,Grass,128,G,111797,Nicolas Jarry,29.0,145,418,111815,Cameron Norrie,29.0,61,952
+5,R16,Grass,128,G,126094,Andrey Rublev,27.0,14,2920,207989,Carlos Alcaraz,22.0,2,9300
+5,QF,Grass,128,G,206173,Jannik Sinner,23.0,1,10430,210097,Ben Shelton,22.0,10,3170
+5,QF,Grass,128,G,207925,Flavio Cobolli,23.0,24,2060,104925,Novak Djokovic,38.0,6,4630
+5,QF,Grass,128,G,126203,Taylor Fritz,27.0,5,4635,111575,Karen Khachanov,29.0,19,2240
+5,QF,Grass,128,G,111815,Cameron Norrie,29.0,61,952,207989,Carlos Alcaraz,22.0,2,9300
+5,SF,Grass,128,G,206173,Jannik Sinner,23.0,1,10430,104925,Novak Djokovic,38.0,6,4630
+5,SF,Grass,128,G,126203,Taylor Fritz,27.0,5,4635,207989,Carlos Alcaraz,22.0,2,9300
+5,SF,Grass,128,G,206173,Jannik Sinner,23.0,1,10430,207989,Carlos Alcaraz,22.0,2,9300
