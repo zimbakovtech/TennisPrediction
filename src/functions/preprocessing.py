@@ -28,7 +28,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     )
 
     # --- 3. Encode categorical features ---
-    df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2, 'Carpet': 3})
+    df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2})
 
     tourney_level_map = {'D': 1, 'A': 2, 'M': 3, 'F': 4, 'O': 5, 'G': 6}
     df['tourney_level'] = (
