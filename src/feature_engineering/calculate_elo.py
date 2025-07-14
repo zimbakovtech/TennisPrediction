@@ -8,7 +8,7 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
 
     # Step 2: Initialize ELO ratings for all players on all surfaces
     all_players = pd.concat([new_df['player_id'], new_df['opponent_id']]).unique()
-    surfaces = [1, 2, 3]  # 0: hard, 1: clay, 2: grass
+    surfaces = [1, 2, 3, 4]  # 0: hard, 1: clay, 2: grass
     elo_ratings = {surface: {player: 1000.0 for player in all_players} for surface in surfaces}
     match_counts = {surface: {player: 0 for player in all_players} for surface in surfaces}
 
@@ -69,8 +69,8 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
             elo_ratings[surface][opponent] = round(new_elo2, 5)
 
     # Step 6: Add the ELO ratings to the DataFrame
-    new_df['player_elo'] = player_elo_before
-    new_df['opponent_elo'] = opponent_elo_before
+    new_df['player_elo_before'] = player_elo_before
+    new_df['opponent_elo_before'] = opponent_elo_before
     # new_df['elo_diff'] = new_df['player_elo'] - new_df['opponent_elo']
 
     # Step 7: Create a DataFrame for final ELO ratings (for each surface)

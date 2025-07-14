@@ -38,13 +38,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
         .map(tourney_level_map)
         .fillna(1)
         .astype(int)
-    ) 
-
-    df['event_importance'] = df['tourney_level'] * df['round'] * (df['best_of'] / 3)
-
-    # --- 4. Fill missing seed values ---
-    df['player_seed'] = df['player_seed'].fillna(0).astype(int)
-    df['opponent_seed'] = df['opponent_seed'].fillna(0).astype(int)
+    )
 
     # --- 5. Compute absolute difference features ---
     df['rank_diff'] = -(df['player_rank'] - df['opponent_rank'])
