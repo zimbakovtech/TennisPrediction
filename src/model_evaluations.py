@@ -1,8 +1,10 @@
-from sklearn.metrics import accuracy_score, precision_score, brier_score_loss, log_loss
+from sklearn.metrics import accuracy_score, precision_score, brier_score_loss, log_loss, f1_score
+from sklearn.model_selection import cross_val_score, KFold
 import numpy as np
 
 def evaluate_model(
     model,
+    X, y,
     X_test, y_test,
     X_train, y_train,
     is_keras=False,
@@ -32,16 +34,23 @@ def evaluate_model(
         test_prec = precision_score(y_test, test_pred)
         train_prec = precision_score(y_train, train_pred)
 
-    print(f"\n=== Results ===")
+    print(f"\n----- Results -----")
     print(f"Test Accuracy:   {test_acc  * 100:.2f}%")
     print(f"Train Accuracy:  {train_acc * 100:.2f}%")
-    print(f"Brier Score (Test):  {brier_score_loss(y_test, test_proba):.4f}")
-    print(f"Log Loss (Test):     {log_loss(y_test, test_proba):.4f}")
+    print(f"Brier Score:     {brier_score_loss(y_test, test_proba):.4f}")
+    print(f"Log Loss:        {log_loss(y_test, test_proba):.4f}")
+    print(f"F1 Score:        {f1_score(y_test, test_pred):.4f}")
 
     # If this is a tree-based model and feature names were given, print importances
     if feature_names is not None and hasattr(model, "feature_importances_"):
         importances = model.feature_importances_
         sorted_idx = np.argsort(importances)[::-1]
-        print("\nFeature Importances (sorted):")
+        print("\nFeature Importances:")
+        max_len = max(len(name) for name in feature_names)
         for idx in sorted_idx:
-            print(f"{feature_names[idx]} (column {idx}): {importances[idx]:.4f}")
+            print(f"{feature_names[idx]}: {' ' * (max_len - len(feature_names[idx]))}{importances[idx] * 100:.1f}%")
+
+    
+    kf = KFold(n_splits=8, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X, y, cv=kf, scoring='accuracy')
+    print(f"\n8-fold CV Mean Accuracy: {np.mean(scores) * 100:.2f}%")
