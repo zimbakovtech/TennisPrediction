@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 from functions.utils import process_y, read_file
 from models.xgboost import XGBoost
 from model_evaluations import evaluate_model
+import pandas as pd
 
 
 if __name__ == "__main__":
@@ -17,3 +18,11 @@ if __name__ == "__main__":
     
     xgb = XGBoost(X_train, y_train)
     evaluate_model(xgb, X, y, X_test, y_test, X_train, y_train, feature_names=feature_names)
+
+    wimbledon_df = pd.read_csv("data/testing/wimbledon_2025.csv")
+    X_wimbledon = wimbledon_df.drop(columns='win_loss').values
+    preds = xgb.predict(X_wimbledon)
+    preds = [2 if pred == 0 else 1 for pred in preds]
+    probs = xgb.predict_proba(X_wimbledon)
+    print("\n=== Predictions for Wimbledon 2025 ===")
+    print(preds)
