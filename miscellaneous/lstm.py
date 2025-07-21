@@ -9,6 +9,10 @@ from torch.utils.data import Dataset, DataLoader
 
 # Step 1: Load data
 data = pd.read_csv('data/processed/all_matches.csv')
+test_data = data.copy()  # For testing purposes
+data = data.iloc[:-127]
+print(data.shape)
+print(test_data.shape)
 
 # Step 2: Preprocess
 data = data.dropna()
@@ -20,14 +24,15 @@ data['tourney_level'] = le_tourney_level.fit_transform(data['tourney_level'])
 data['round'] = le_round.fit_transform(data['round'])
 feature_columns = [
     'surface', 'tourney_level', 'best_of', 'round', 'rank_diff', 'points_diff',
-    'age_diff', 'h2h_diff', 'player_elo_before', 'opponent_elo_before'
+    'age_diff', 'h2h_diff',
+    'player_elo_before', 'opponent_elo_before'
 ]
 scaler = StandardScaler()
 data[feature_columns] = scaler.fit_transform(data[feature_columns])
 target = data['win_loss'].values
 
 # Step 3: Create sequences
-seq_length = 10
+seq_length = 5
 def create_sequences(data, seq_length):
     sequences = []
     targets = []
@@ -43,7 +48,7 @@ def create_sequences(data, seq_length):
     return np.array(sequences), np.array(targets)
 
 X, y = create_sequences(data, seq_length)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 X_train = torch.tensor(X_train, dtype=torch.float32)
 y_train = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
 X_test = torch.tensor(X_test, dtype=torch.float32)
@@ -127,3 +132,37 @@ def evaluate_model(model, test_loader):
     print(f'Test Accuracy: {accuracy:.4f}')
 
 evaluate_model(model, test_loader)
+
+# test_data = pd.read_csv('data/testing/wimbledon_2025_lstm.csv')
+
+# Preprocess test_data
+test_data = test_data.dropna()
+test_data['surface'] = le_surface.transform(test_data['surface'])
+test_data['tourney_level'] = le_tourney_level.transform(test_data['tourney_level'])
+test_data['round'] = le_round.transform(test_data['round'])
+test_data[feature_columns] = scaler.transform(test_data[feature_columns])
+
+# Create sequences for test_data
+test_sequences = []
+for player_id in test_data['player_id'].unique():
+    player_data = test_data[test_data['player_id'] == player_id]
+    features = player_data[feature_columns].values
+    for i in range(len(player_data) - seq_length + 1):
+        seq = features[i:i + seq_length]
+        test_sequences.append(seq)
+
+test_sequences = np.array(test_sequences)
+test_sequences = torch.tensor(test_sequences, dtype=torch.float32)
+
+# Make predictions
+model.eval()
+predictions = []
+with torch.no_grad():
+    for seq in test_sequences[-127:]:  # Last 127 matches
+        seq = seq.unsqueeze(0).to(device)  # Add batch dimension
+        output = model(seq)
+        predictions.append(output.item())
+
+predictions = [1 if pred > 0.5 else 2 for pred in predictions]
+
+print(predictions)
