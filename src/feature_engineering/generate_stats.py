@@ -20,13 +20,13 @@ def generate_stats(df: pd.DataFrame, window: int = 10, lookback: int = 600) -> p
         player_matches = prev_df[(prev_df['player_id'] == player_id) | (prev_df['opponent_id'] == player_id)]
         player_aces = player_matches.apply(
             lambda r: r['w_ace'] if r['player_id'] == player_id else r['l_ace'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
         player_df = player_matches.apply(
             lambda r: r['w_df'] if r['player_id'] == player_id else r['l_df'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
         player_bpSaved = player_matches.apply(
             lambda r: r['w_bpSaved'] if r['player_id'] == player_id else r['l_bpSaved'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
 
         w_ace_avgs.append(round(player_aces.mean(), 2) if not player_aces.empty else None)
         w_df_avgs.append(round(player_df.mean(), 2) if not player_df.empty else None)
@@ -36,13 +36,13 @@ def generate_stats(df: pd.DataFrame, window: int = 10, lookback: int = 600) -> p
         opponent_matches = prev_df[(prev_df['player_id'] == opponent_id) | (prev_df['opponent_id'] == opponent_id)]
         opponent_aces = opponent_matches.apply(
             lambda r: r['w_ace'] if r['player_id'] == opponent_id else r['l_ace'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
         opponent_df = opponent_matches.apply(
             lambda r: r['w_df'] if r['player_id'] == opponent_id else r['l_df'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
         opponent_bpSaved = opponent_matches.apply(
             lambda r: r['w_bpSaved'] if r['player_id'] == opponent_id else r['l_bpSaved'], axis=1
-        ).tail(window)
+        ).dropna().tail(window)
 
         l_ace_avgs.append(round(opponent_aces.mean(), 2) if not opponent_aces.empty else None)
         l_df_avgs.append(round(opponent_df.mean(), 2) if not opponent_df.empty else None)

@@ -55,7 +55,7 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
     final_elo_df = calculate_elo(final_df)
 
     # Remove player_id and opponent_id from dataset
-    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id'])
+    final_elo_df = final_elo_df.drop(columns=['player_id', 'opponent_id', 'tourney_level', 'round', 'surface'])
 
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)

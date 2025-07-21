@@ -29,8 +29,6 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
 
     # --- 3. Encode categorical features ---
     df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2})
-    df['player_hand'] = df['player_hand'].map({'R': 0, 'L': 1})
-    df['opponent_hand'] = df['opponent_hand'].map({'R': 0, 'L': 1})
 
     tourney_level_map = {'D': 1, 'A': 2, 'M': 3, 'F': 4, 'O': 5, 'G': 6}
     df['tourney_level'] = (
@@ -40,9 +38,7 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
         .astype(int)
     )
 
-    # --- 4. Fill missing seed values ---
-    df['player_seed'] = df['player_seed'].fillna(0).astype(int)
-    df['opponent_seed'] = df['opponent_seed'].fillna(0).astype(int)
+    df['match_importance'] = df['tourney_level'] * df['round'] * df['best_of']
 
     # --- 5. Compute absolute difference features ---
     df['rank_diff'] = -(df['player_rank'] - df['opponent_rank'])
