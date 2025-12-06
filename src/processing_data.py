@@ -4,7 +4,13 @@ from typing import List
 import pandas as pd
 from functions.duplicate_entries import duplicate_entries
 from functions.preprocessing import load_and_preprocess
-from feature_engineering.generate_stats import generate_stats
+from feature_engineering.generate_stats import generate_stats as generate_stats_py
+try:
+    from functions.native_rolling import generate_stats_native
+    _HAS_NATIVE = True
+except Exception:
+    generate_stats_native = None
+    _HAS_NATIVE = False
 from feature_engineering.calculate_elo import calculate_elo
 from feature_engineering.head2head import add_h2h_stats
 
@@ -89,7 +95,17 @@ def process_all(data_dir: Path, output_path: Path) -> None:
         "Combined data frame has %d rows, computing rolling averages...",
         len(combined_df)
     )
-    averaged_df = generate_stats(combined_df)
+    # Compute rolling averages (native C++ if available, fallback to Python)
+    if _HAS_NATIVE:
+        logger.info("Computing rolling averages using native C++ module (OpenMP)...")
+        try:
+            averaged_df = generate_stats_native(combined_df, window=10, lookback=600, sort_if_needed=False)
+        except Exception as e:
+            logger.error("Native rolling failed (%s). Falling back to Python implementation.", e)
+            averaged_df = generate_stats_py(combined_df)
+    else:
+        logger.info("Native module not available; using Python implementation.")
+        averaged_df = generate_stats_py(combined_df)
 
     h2h_df = add_h2h_stats(averaged_df)
 
@@ -100,7 +116,8 @@ def process_all(data_dir: Path, output_path: Path) -> None:
 if __name__ == '__main__':
     current_dir = Path.cwd()
     data_directory = current_dir / 'data' / 'raw'
-    processed_file = current_dir / 'data' / 'processed' / 'all_matches.csv'
+    # Write a native-specific output to avoid clobbering existing CSVs
+    processed_file = current_dir / 'data' / 'processed' / 'all_matches_from_native.csv'
 
     process_all(data_directory, processed_file)
     logger.info("Data processing complete.")
