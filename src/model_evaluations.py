@@ -1,3 +1,4 @@
+from sklearn.calibration import CalibratedClassifierCV, FrozenEstimator
 from sklearn.metrics import accuracy_score, precision_score, brier_score_loss, log_loss, f1_score
 from sklearn.model_selection import cross_val_score, KFold
 import numpy as np
@@ -38,7 +39,22 @@ def evaluate_model(
     print(f"Test Accuracy:   {test_acc  * 100:.2f}%")
     print(f"Train Accuracy:  {train_acc * 100:.2f}%")
     print(f"Brier Score:     {brier_score_loss(y_test, test_proba):.4f}")
-    print(f"Log Loss:        {log_loss(y_test, test_proba):.4f}")
+    base_log_loss = log_loss(y_test, test_proba)
+    print(f"Log Loss (uncalibrated): {base_log_loss:.4f}")
+    if hasattr(model, "predict_proba"):
+        calibration_methods = {
+            "Platt (sigmoid)": CalibratedClassifierCV(FrozenEstimator(model), method="sigmoid"),
+            "Isotonic": CalibratedClassifierCV(FrozenEstimator(model), method="isotonic")
+        }
+        print("Calibration Log Loss:")
+        for label, calibrator in calibration_methods.items():
+            try:
+                calibrator.fit(X_train, y_train)
+                calibrated_probs = calibrator.predict_proba(X_test)[:, 1]
+                calibrated_log_loss = log_loss(y_test, calibrated_probs)
+                print(f"  {label}:       {calibrated_log_loss:.4f}")
+            except ValueError as exc:
+                print(f"  {label}:       skipped ({exc})")
     print(f"F1 Score:        {f1_score(y_test, test_pred):.4f}")
 
     # If this is a tree-based model and feature names were given, print importances

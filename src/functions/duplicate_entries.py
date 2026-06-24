@@ -6,6 +6,9 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
     # 1. Define column pairs to swap between player and opponent
     swap_pairs = [
         ('player_id', 'opponent_id'),
+        ('player_elo_before', 'opponent_elo_before'),
+        # ('player_wins_last_10', 'opponent_wins_last_10'),
+        # ('player_elo_trend', 'opponent_elo_trend'),
     ]
 
     # 2. Create a mirrored copy of the DataFrame
@@ -16,7 +19,7 @@ def duplicate_entries(df: pd.DataFrame) -> pd.DataFrame:
         mirrored[[col_a, col_b]] = mirrored[[col_b, col_a]]
 
     # 4. Flip sign for difference columns in mirrored DataFrame
-    diff_cols = ['rank_diff', 'points_diff', 'seed_diff', 'age_diff', 'height_diff', 'ace_diff', 'df_diff', 'bp_diff', 'h2h_diff']
+    diff_cols = ['rank_diff', 'points_diff', 'seed_diff', 'age_diff', 'height_diff', 'ace_diff', 'df_diff', 'bp_diff', 'h2h_diff', 'elo_diff']
     for col in diff_cols:
         if col in mirrored.columns:
             mirrored[col] = -mirrored[col]
