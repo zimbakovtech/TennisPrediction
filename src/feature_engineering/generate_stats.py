@@ -1,62 +1,71 @@
 import pandas as pd
 import numpy as np
 
+# Map an output stat name to the (winner_column, loser_column) it comes from.
+STAT_SOURCES = {
+    "ace": ("w_ace", "l_ace"),
+    "df": ("w_df", "l_df"),
+    "bp": ("w_bpSaved", "l_bpSaved"),
+}
 
-def generate_stats(df: pd.DataFrame, window: int = 10, lookback: int = 600) -> pd.DataFrame:
-    w_ace_avgs, l_ace_avgs = [], []
-    w_df_avgs, l_df_avgs = [], []
-    w_bpSaved_avgs, l_bpSaved_avgs = [], []
-    
-    for idx, row in df.iterrows():
-        if idx % 1000 == 0:
-            print(f"Processing row {idx}/{len(df)}...")
-        start_idx = max(0, idx - lookback)
-        prev_df = df.iloc[start_idx:idx]
 
-        player_id = row['player_id']
-        opponent_id = row['opponent_id']
+def generate_stats(df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
+    """Add rolling pre-match form averages for player and opponent.
 
-        # Player stats
-        player_matches = prev_df[(prev_df['player_id'] == player_id) | (prev_df['opponent_id'] == player_id)]
-        player_aces = player_matches.apply(
-            lambda r: r['w_ace'] if r['player_id'] == player_id else r['l_ace'], axis=1
-        ).dropna().tail(window)
-        player_df = player_matches.apply(
-            lambda r: r['w_df'] if r['player_id'] == player_id else r['l_df'], axis=1
-        ).dropna().tail(window)
-        player_bpSaved = player_matches.apply(
-            lambda r: r['w_bpSaved'] if r['player_id'] == player_id else r['l_bpSaved'], axis=1
-        ).dropna().tail(window)
+    For every match we compute each competitor's mean over their own previous
+    (up to ``window``) matches, strictly excluding the current match
+    (``shift(1)``), so there is no leakage. Implemented with groupby-rolling on
+    a long-format frame keyed by player id -- O(n) instead of the old O(n^2)
+    row-wise loop.
 
-        w_ace_avgs.append(round(player_aces.mean(), 2) if not player_aces.empty else None)
-        w_df_avgs.append(round(player_df.mean(), 2) if not player_df.empty else None)
-        w_bpSaved_avgs.append(round(player_bpSaved.mean(), 2) if not player_bpSaved.empty else None)
+    The input MUST already be in chronological order (handled globally in
+    ``processing_data``). Players with no prior matches get NaN, which the
+    gradient-boosted trees handle natively.
+    """
+    df = df.reset_index(drop=True).copy()
+    df["_match_order"] = np.arange(len(df))
 
-        # Opponent stats
-        opponent_matches = prev_df[(prev_df['player_id'] == opponent_id) | (prev_df['opponent_id'] == opponent_id)]
-        opponent_aces = opponent_matches.apply(
-            lambda r: r['w_ace'] if r['player_id'] == opponent_id else r['l_ace'], axis=1
-        ).dropna().tail(window)
-        opponent_df = opponent_matches.apply(
-            lambda r: r['w_df'] if r['player_id'] == opponent_id else r['l_df'], axis=1
-        ).dropna().tail(window)
-        opponent_bpSaved = opponent_matches.apply(
-            lambda r: r['w_bpSaved'] if r['player_id'] == opponent_id else r['l_bpSaved'], axis=1
-        ).dropna().tail(window)
+    # Build a long frame: one record per (match, role), carrying that
+    # competitor's own stats for the match (winner -> w_*, loser -> l_*).
+    frames = []
+    for role, id_col in (("player", "player_id"), ("opponent", "opponent_id")):
+        is_winner = role == "player"
+        rec = pd.DataFrame({
+            "_match_order": df["_match_order"],
+            "role": role,
+            "pid": df[id_col],
+        })
+        for stat, (w_col, l_col) in STAT_SOURCES.items():
+            rec[stat] = df[w_col] if is_winner else df[l_col]
+        frames.append(rec)
 
-        l_ace_avgs.append(round(opponent_aces.mean(), 2) if not opponent_aces.empty else None)
-        l_df_avgs.append(round(opponent_df.mean(), 2) if not opponent_df.empty else None)
-        l_bpSaved_avgs.append(round(opponent_bpSaved.mean(), 2) if not opponent_bpSaved.empty else None)
-        
-    df = df.copy()
-    df['w_ace_avg'] = w_ace_avgs
-    df['l_ace_avg'] = l_ace_avgs
-    df['w_df_avg'] = w_df_avgs
-    df['l_df_avg'] = l_df_avgs
-    df['w_bpSaved_avg'] = w_bpSaved_avgs
-    df['l_bpSaved_avg'] = l_bpSaved_avgs
-    df['ace_diff'] = (df['w_ace_avg'] - df['l_ace_avg']).round(5)
-    df['df_diff'] = -(df['w_df_avg'] - df['l_df_avg']).round(5)
-    df['bp_diff'] = (df['w_bpSaved_avg'] - df['l_bpSaved_avg']).round(5)
+    long = pd.concat(frames, ignore_index=True)
+    # Stable sort so that within each player rows stay in chronological order.
+    long = long.sort_values(["pid", "_match_order"], kind="mergesort")
 
-    return df
+    grp = long.groupby("pid", sort=False)
+    for stat in STAT_SOURCES:
+        long[f"{stat}_avg"] = (
+            grp[stat]
+            .transform(lambda s: s.shift(1).rolling(window, min_periods=1).mean())
+            .round(2)
+        )
+
+    # Pivot the rolling averages back onto the original match rows.
+    player_avg = long[long["role"] == "player"].set_index("_match_order")
+    opp_avg = long[long["role"] == "opponent"].set_index("_match_order")
+
+    df["player_ace_avg"] = df["_match_order"].map(player_avg["ace_avg"])
+    df["player_df_avg"] = df["_match_order"].map(player_avg["df_avg"])
+    df["player_bpSaved_avg"] = df["_match_order"].map(player_avg["bp_avg"])
+    df["opponent_ace_avg"] = df["_match_order"].map(opp_avg["ace_avg"])
+    df["opponent_df_avg"] = df["_match_order"].map(opp_avg["df_avg"])
+    df["opponent_bpSaved_avg"] = df["_match_order"].map(opp_avg["bp_avg"])
+
+    # Difference features (player - opponent). df_diff is negated because fewer
+    # double faults is better.
+    df["ace_diff"] = (df["player_ace_avg"] - df["opponent_ace_avg"]).round(5)
+    df["df_diff"] = (-(df["player_df_avg"] - df["opponent_df_avg"])).round(5)
+    df["bp_diff"] = (df["player_bpSaved_avg"] - df["opponent_bpSaved_avg"]).round(5)
+
+    return df.drop(columns="_match_order")

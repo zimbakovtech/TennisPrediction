@@ -1,110 +1,97 @@
 import pandas as pd
-import numpy as np
-from functions import utils
+
+from config import PATHS
+
+# Elo configuration
+K_FACTOR = 32
+INITIAL_ELO = 1500.0
+DECAY_THRESHOLD = 5      # matches below which a player's rating is pulled to INITIAL_ELO
+DECAY_WEIGHT = 5         # strength of that pull (M in the blended-average formula)
+SURFACES = (0, 1, 2)     # 0=hard, 1=clay, 2=grass
+
+
+def _expected(elo_a: float, elo_b: float) -> float:
+    """Standard logistic Elo expected score for player A."""
+    return 1.0 / (1.0 + 10 ** ((elo_b - elo_a) / 400))
+
+
+def _decay(new_elo: float, count: int) -> float:
+    """Blend a young player's rating toward INITIAL_ELO until DECAY_THRESHOLD."""
+    if count < DECAY_THRESHOLD:
+        return (count * new_elo + DECAY_WEIGHT * INITIAL_ELO) / (count + DECAY_WEIGHT)
+    return new_elo
+
 
 def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
-    new_df = df.copy()
-    y = np.array([1, 0] * 27672).tolist()
+    """Compute pre-match (global and per-surface) Elo ratings.
 
-    # Step 2: Initialize ELO ratings for all players (overall and per surface)
-    all_players = pd.concat([new_df['player_id'], new_df['opponent_id']]).unique()
-    elo_ratings = {player: 1000.0 for player in all_players}
-    match_counts = {player: 0 for player in all_players}
-    # Surface ELOs: 0=hard, 1=clay, 2=grass
-    surface_elo_ratings = {surface: {player: 1000.0 for player in all_players} for surface in [0, 1, 2]}
-    surface_match_counts = {surface: {player: 0 for player in all_players} for surface in [0, 1, 2]}
+    Runs on the *pre-mirror* frame, where each row is one real match and the
+    ``player_*`` columns are the winner (``win_loss == 1``). Ratings are read
+    *before* the update and stored, so they never leak the current result.
 
-    # Step 3: Prepare lists to store ELO ratings before each match
+    The input MUST be in chronological order. The mirrored perspective is
+    produced later by ``duplicate_entries`` (which swaps the two elo columns
+    and negates ``surface_elo_diff``), so this function does not need to know
+    about mirroring -- no magic row counts, no index parity tricks.
+    """
+    df = df.copy()
+
+    players = df["player_id"].to_numpy()
+    opponents = df["opponent_id"].to_numpy()
+    surfaces = df["surface"].to_numpy()
+    wins = df["win_loss"].to_numpy()
+
+    all_players = pd.concat([df["player_id"], df["opponent_id"]]).unique()
+    elo = {p: INITIAL_ELO for p in all_players}
+    counts = {p: 0 for p in all_players}
+    surf_elo = {s: {p: INITIAL_ELO for p in all_players} for s in SURFACES}
+    surf_counts = {s: {p: 0 for p in all_players} for s in SURFACES}
+
     player_elo_before = []
     opponent_elo_before = []
-    player_surface_elo_before = []
-    opponent_surface_elo_before = []
     surface_elo_diff = []
-    elo_diff = []
 
-    # Step 4: Set the K-factor
-    K_max = 32
-    decay_threshold = 5
-    M = 5
-    initial_elo = 1000
+    for i in range(len(df)):
+        p, o, s, win = players[i], opponents[i], surfaces[i], wins[i]
 
-    # Step 5: Process each match in chronological order
-    for (index, row), label in zip(new_df.iterrows(), y):
-        player = row['player_id']
-        opponent = row['opponent_id']
-        winner = row['player_id'] if label == 1 else row['opponent_id']
-        surface = row['surface']
+        elo_p, elo_o = elo[p], elo[o]
+        player_elo_before.append(elo_p)
+        opponent_elo_before.append(elo_o)
 
-        # Get current ELO ratings before the match
-        elo1 = elo_ratings[player]
-        elo2 = elo_ratings[opponent]
-        surf_elo1 = surface_elo_ratings[surface][player]
-        surf_elo2 = surface_elo_ratings[surface][opponent]
+        # S1 is 1 when the player (winner pre-mirror) wins.
+        s1 = 1.0 if win == 1 else 0.0
+        s2 = 1.0 - s1
 
-        # Store these ELO ratings in the lists
-        player_elo_before.append(elo1)
-        opponent_elo_before.append(elo2)
-        player_surface_elo_before.append(surf_elo1)
-        opponent_surface_elo_before.append(surf_elo2)
-        elo_diff.append(round(elo1 - elo2, 5))
-        surface_elo_diff.append(round(surf_elo1 - surf_elo2, 5))
+        # --- Global Elo update ---
+        e_p = _expected(elo_p, elo_o)
+        counts[p] += 1
+        counts[o] += 1
+        elo[p] = round(_decay(elo_p + K_FACTOR * (s1 - e_p), counts[p]), 5)
+        elo[o] = round(_decay(elo_o + K_FACTOR * (s2 - (1 - e_p)), counts[o]), 5)
 
-        # Calculate expected scores (overall)
-        E1 = 1 / (1 + 10 ** ((elo2 - elo1) / 400))
-        E2 = 1 - E1
-
-        # Calculate expected scores (surface)
-        surf_E1 = 1 / (1 + 10 ** ((surf_elo2 - surf_elo1) / 400))
-        surf_E2 = 1 - surf_E1
-
-        # Determine actual scores
-        if winner == player:
-            S1 = 1
-            S2 = 0
-        elif winner == opponent:
-            S1 = 0
-            S2 = 1
+        # --- Surface Elo update (skip rows with an unknown surface) ---
+        if s in surf_elo:
+            se_p, se_o = surf_elo[s][p], surf_elo[s][o]
+            surface_elo_diff.append(round(se_p - se_o, 5))
+            se = _expected(se_p, se_o)
+            surf_counts[s][p] += 1
+            surf_counts[s][o] += 1
+            surf_elo[s][p] = round(_decay(se_p + K_FACTOR * (s1 - se), surf_counts[s][p]), 5)
+            surf_elo[s][o] = round(_decay(se_o + K_FACTOR * (s2 - (1 - se)), surf_counts[s][o]), 5)
         else:
-            raise ValueError("Winner ID does not match either player ID")
+            surface_elo_diff.append(0.0)
 
-        # Update ELO ratings (overall)
-        new_elo1 = elo1 + K_max * (S1 - E1)
-        new_elo2 = elo2 + K_max * (S2 - E2)
-        match_counts[player] += 1
-        match_counts[opponent] += 1
-        if match_counts[player] < decay_threshold:
-            new_elo1 = (match_counts[player] * new_elo1 + M * initial_elo) / (match_counts[player] + M)
-        if match_counts[opponent] < decay_threshold:
-            new_elo2 = (match_counts[opponent] * new_elo2 + M * initial_elo) / (match_counts[opponent] + M)
+    df["player_elo_before"] = player_elo_before
+    df["opponent_elo_before"] = opponent_elo_before
+    df["surface_elo_diff"] = surface_elo_diff
 
-        # Update ELO ratings (surface)
-        new_surf_elo1 = surf_elo1 + K_max * (S1 - surf_E1)
-        new_surf_elo2 = surf_elo2 + K_max * (S2 - surf_E2)
-        surface_match_counts[surface][player] += 1
-        surface_match_counts[surface][opponent] += 1
-        if surface_match_counts[surface][player] < decay_threshold:
-            new_surf_elo1 = (surface_match_counts[surface][player] * new_surf_elo1 + M * initial_elo) / (surface_match_counts[surface][player] + M)
-        if surface_match_counts[surface][opponent] < decay_threshold:
-            new_surf_elo2 = (surface_match_counts[surface][opponent] * new_surf_elo2 + M * initial_elo) / (surface_match_counts[surface][opponent] + M)
+    # Persist final global ratings (handy for inference / inspection).
+    elo_df = (
+        pd.DataFrame(list(elo.items()), columns=["player_id", "elo"])
+        .sort_values(by="elo", ascending=False)
+        .reset_index(drop=True)
+    )
+    PATHS["elo_ratings"].parent.mkdir(parents=True, exist_ok=True)
+    elo_df.to_csv(PATHS["elo_ratings"], index=False)
 
-        # Update the dictionaries with the new ELO ratings
-        if index % 2 == 1:
-            elo_ratings[player] = round(new_elo1, 5)
-            elo_ratings[opponent] = round(new_elo2, 5)
-            surface_elo_ratings[surface][player] = round(new_surf_elo1, 5)
-            surface_elo_ratings[surface][opponent] = round(new_surf_elo2, 5)
-
-    # Step 6: Add the ELO ratings to the DataFrame
-    new_df['player_elo_before'] = player_elo_before
-    new_df['opponent_elo_before'] = opponent_elo_before
-    # new_df['elo_diff'] = elo_diff
-    # new_df['player_surface_elo_before'] = player_surface_elo_before
-    # new_df['opponent_surface_elo_before'] = opponent_surface_elo_before
-    new_df['surface_elo_diff'] = surface_elo_diff
-
-    # Step 7: Create a DataFrame for final ELO ratings
-    elo_df = pd.DataFrame(list(elo_ratings.items()), columns=['player_id', 'elo'])
-    elo_df = elo_df.sort_values(by='elo', ascending=False).reset_index(drop=True)
-    elo_df.to_csv('data/players/player_elo_ratings.csv', index=False)
-
-    return new_df
+    return df
