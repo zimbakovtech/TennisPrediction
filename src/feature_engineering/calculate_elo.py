@@ -22,7 +22,7 @@ def _decay(new_elo: float, count: int) -> float:
     return new_elo
 
 
-def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
+def calculate_elo(df: pd.DataFrame, elo_output_path=None) -> pd.DataFrame:
     """Compute pre-match (global and per-surface) Elo ratings.
 
     Runs on the *pre-mirror* frame, where each row is one real match and the
@@ -33,6 +33,10 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
     produced later by ``duplicate_entries`` (which swaps the two elo columns
     and negates ``surface_elo_diff``), so this function does not need to know
     about mirroring -- no magic row counts, no index parity tricks.
+
+    The final global ratings are written to ``elo_output_path`` (defaults to
+    ``PATHS['elo_ratings']``); pass a per-tour path to keep ATP and WTA dumps
+    from overwriting each other.
     """
     df = df.copy()
 
@@ -91,7 +95,8 @@ def calculate_elo(df: pd.DataFrame) -> pd.DataFrame:
         .sort_values(by="elo", ascending=False)
         .reset_index(drop=True)
     )
-    PATHS["elo_ratings"].parent.mkdir(parents=True, exist_ok=True)
-    elo_df.to_csv(PATHS["elo_ratings"], index=False)
+    out_path = elo_output_path if elo_output_path is not None else PATHS["elo_ratings"]
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    elo_df.to_csv(out_path, index=False)
 
     return df

@@ -9,6 +9,7 @@ pandas==2.2.3
 scipy==1.15.3
 scikit-learn==1.6.1
 xgboost==3.0.2
+joblib==1.5.2          # model persistence (save/load trained models)
 
 # Alternative model wrappers under src/models/
 lightgbm==4.6.0

@@ -15,8 +15,22 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
 
     Chronological ordering is handled globally in ``processing_data`` (sorting
     by ``tourney_date, round, match_num``), so this function does not sort.
+
+    Works for either tour: Jeff Sackmann's ATP and WTA files share one schema.
+    Sackmann ships matches with ``winner_*``/``loser_*`` columns; this function
+    first renames those to the repo's ``player_*``/``opponent_*`` convention so
+    the winner is always the "player". The rename is idempotent -- files that
+    were already renamed (the existing ATP set) contain no ``winner_``/``loser_``
+    substring and pass through untouched, and the ``w_*``/``l_*`` serve-stat
+    columns are left alone (they don't match those prefixes).
     """
     df = pd.read_csv(filepath)
+
+    # --- 0. Normalise winner/loser column names to player/opponent ---
+    df.columns = [
+        c.replace('winner_', 'player_').replace('loser_', 'opponent_')
+        for c in df.columns
+    ]
 
     # --- 1. Encode round labels to numeric (higher = later round) ---
     round_map = {
@@ -28,7 +42,15 @@ def load_and_preprocess(filepath: str) -> pd.DataFrame:
     # --- 2. Encode categorical features ---
     df['surface'] = df['surface'].map({'Hard': 0, 'Clay': 1, 'Grass': 2})
 
-    tourney_level_map = {'D': 1, 'A': 2, 'M': 3, 'F': 4, 'O': 5, 'G': 6}
+    # Union of ATP and WTA tourney-level codes (no key collisions; shared codes
+    # G/F/O/D map identically, so ATP importance is unchanged). WTA tiers, high
+    # to low: Grand Slam (G) > Premier Mandatory (PM, ~WTA 1000) > Premier
+    # (P, ~WTA 1000/500) > International (I, ~WTA 250) > 125 series (W). Codes
+    # verified against the real wta_matches files. Unknown codes -> 0 via fillna.
+    tourney_level_map = {
+        'D': 1, 'A': 2, 'M': 3, 'F': 4, 'O': 5, 'G': 6,  # ATP (unchanged)
+        'W': 1, 'I': 2, 'P': 4, 'PM': 5,                 # WTA-only
+    }
     df['tourney_level'] = (
         df['tourney_level'].map(tourney_level_map).fillna(0).astype(int)
     )

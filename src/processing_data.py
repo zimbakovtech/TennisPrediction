@@ -4,7 +4,7 @@ from typing import List
 
 import pandas as pd
 
-from config import PATHS
+from config import PATHS, TOURS, processed_path, elo_path
 from functions.duplicate_entries import duplicate_entries
 from functions.preprocessing import load_and_preprocess
 from feature_engineering.generate_stats import generate_stats
@@ -58,13 +58,18 @@ def postprocess_and_save(df: pd.DataFrame, output_path: Path) -> None:
                 len(final_df), final_df.shape[1], output_path)
 
 
-def process_all(data_dir: Path, output_path: Path) -> None:
-    files = sorted(data_dir.glob("atp_matches_*.csv"))
+def process_all(
+    data_dir: Path,
+    output_path: Path,
+    tour: str = "atp",
+    elo_output_path: Path = None,
+) -> None:
+    files = sorted(data_dir.glob(f"{tour}_matches_*.csv"))
     if not files:
-        logger.warning("No raw files found in %s", data_dir)
+        logger.warning("No %s raw files found in %s", tour, data_dir)
         return
 
-    logger.info("Processing %d files from %s", len(files), data_dir)
+    logger.info("Processing %d %s files from %s", len(files), tour, data_dir)
 
     data_frames: List[pd.DataFrame] = []
     for filepath in files:
@@ -73,6 +78,10 @@ def process_all(data_dir: Path, output_path: Path) -> None:
             logger.debug("Loaded and preprocessed %s", filepath)
         except Exception as e:
             logger.error("Error processing %s: %s", filepath, e)
+
+    if not data_frames:
+        logger.warning("No %s files could be parsed in %s; skipping.", tour, data_dir)
+        return
 
     combined = pd.concat(data_frames, ignore_index=True)
 
@@ -90,11 +99,17 @@ def process_all(data_dir: Path, output_path: Path) -> None:
     combined = add_h2h_stats(combined)
 
     logger.info("Computing Elo ratings...")
-    combined = calculate_elo(combined)
+    combined = calculate_elo(combined, elo_output_path=elo_output_path)
 
     postprocess_and_save(combined, output_path)
 
 
 if __name__ == "__main__":
-    process_all(PATHS["raw"], PATHS["processed_matches"])
+    for tour in TOURS:
+        process_all(
+            PATHS["raw"],
+            processed_path(tour),
+            tour=tour,
+            elo_output_path=elo_path(tour),
+        )
     logger.info("Data processing complete.")

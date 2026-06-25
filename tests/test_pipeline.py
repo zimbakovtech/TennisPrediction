@@ -8,6 +8,7 @@ import pytest
 
 import config
 from functions.duplicate_entries import duplicate_entries
+from functions.preprocessing import load_and_preprocess
 from feature_engineering.generate_stats import generate_stats
 from feature_engineering.calculate_elo import calculate_elo, INITIAL_ELO
 from feature_engineering.head2head import add_h2h_stats
@@ -109,6 +110,55 @@ def test_calculate_elo_semantics(tmp_path, monkeypatch):
     # (player of match 1 is id 2, the previous loser -> below 1000)
     assert out.loc[1, "opponent_elo_before"] > INITIAL_ELO   # id 1 as opponent
     assert out.loc[1, "player_elo_before"] < INITIAL_ELO     # id 2 as player
+
+
+# --------------------------------------------------------------------------- #
+# load_and_preprocess: works for both tours (winner/loser rename + level map)
+# --------------------------------------------------------------------------- #
+def _write_raw(tmp_path, cols: dict):
+    path = tmp_path / "raw.csv"
+    pd.DataFrame(cols).to_csv(path, index=False)
+    return path
+
+
+def test_preprocess_renames_winner_loser_and_keeps_serve_stats(tmp_path):
+    # Sackmann-style raw file (as freshly downloaded for WTA): winner_*/loser_*.
+    path = _write_raw(tmp_path, {
+        "tourney_level": ["PM"], "round": ["F"], "best_of": [3], "surface": ["Hard"],
+        "winner_rank": [3], "loser_rank": [10],
+        "winner_rank_points": [4000], "loser_rank_points": [2000],
+        "winner_age": [25.0], "loser_age": [28.0],
+        "w_ace": [5], "l_ace": [3],   # serve stats must survive the rename
+    })
+    out = load_and_preprocess(path)
+
+    # winner_/loser_ renamed to player_/opponent_ ...
+    assert {"player_rank", "opponent_rank", "player_age", "opponent_age"} <= set(out.columns)
+    assert not any(c.startswith(("winner_", "loser_")) for c in out.columns)
+    # ... but w_*/l_* serve-stat columns are left untouched.
+    assert "w_ace" in out.columns and "l_ace" in out.columns
+    # WTA tourney_level code 'PM' maps to a non-zero match_importance (5*7*3).
+    assert out.loc[0, "match_importance"] == 5 * 7 * 3
+    assert out.loc[0, "win_loss"] == 1
+
+
+def test_preprocess_idempotent_on_player_opponent_columns(tmp_path):
+    # Already-renamed file (the existing ATP set) must pass through untouched.
+    path = _write_raw(tmp_path, {
+        "tourney_level": ["G"], "round": ["QF"], "best_of": [5], "surface": ["Clay"],
+        "player_rank": [1], "opponent_rank": [50],
+        "player_rank_points": [9000], "opponent_rank_points": [1200],
+        "player_age": [22.0], "opponent_age": [30.0],
+    })
+    out = load_and_preprocess(path)
+    assert out.loc[0, "match_importance"] == 6 * 5 * 5  # G=6, QF=5, best_of=5
+    assert out.loc[0, "rank_diff"] == 49               # -(1 - 50)
+
+
+def test_calculate_elo_writes_to_explicit_path(tmp_path):
+    out_path = tmp_path / "nested" / "wta_elo.csv"
+    calculate_elo(_elo_df(2), elo_output_path=out_path)
+    assert out_path.exists()
 
 
 def test_head2head_pre_match():
