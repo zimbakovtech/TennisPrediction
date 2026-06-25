@@ -1,0 +1,8 @@
+# Heavy deep-learning stack -- ONLY needed for the experimental transformer /
+# LSTM code under miscellaneous/. The main XGBoost pipeline does NOT need this.
+#   pip install -r requirements-dl.txt
+
+torch==2.7.1
+tensorflow==2.19.0
+keras==3.10.0
+tensorboard==2.19.0

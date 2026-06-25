@@ -1,0 +1,13 @@
+# Tooling configuration for TennisPrediction.
+# The project runs as scripts (src/ is added to sys.path when a script under it
+# is executed directly); `pythonpath = ["src"]` gives tests the same imports.
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100

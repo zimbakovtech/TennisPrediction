@@ -127,6 +127,14 @@ Outputs:
 
 ## Results & Metrics
 
+> **Note:** the multi-model comparison below is historical. The current code
+> trains only XGBoost and reports metrics from a leak-free, time-respecting
+> evaluation: **Test ≈ 65.8% / Train ≈ 68.8%**, Brier ≈ 0.212, Log Loss ≈ 0.611,
+> F1 ≈ 0.658, time-series CV ≈ 65.6% (±0.9%). These are slightly below the older
+> figures because the previous CV was leaky and missing form values were
+> zero-filled. Regenerate everything with `myenv/bin/python src/processing_data.py`
+> then `myenv/bin/python src/train_models.py` (see `CLAUDE.md`).
+
 **XGBoost** achieved the best test accuracy of **66.34%** (67.77% train)  
 A concise comparison:
 
@@ -144,23 +152,25 @@ A concise comparison:
 
 ## Feature Importances
 
-Below are the relative importances (as percentages) for the XGBoost model:
+Relative importances (as percentages) for the current XGBoost model. The
+feature set is 12 predictors; surface enters only via `surface_elo_diff`, and
+`tourney_level`/`round`/`surface` are folded into `match_importance` and the Elo
+features rather than used directly:
 
 | Feature             | Importance (%) |
 |---------------------|---------------:|
-| points_diff         |          48.47 |
-| rank_diff           |           8.02 |
-| player_elo_before   |           6.04 |
-| opponent_elo_before |           5.85 |
-| best_of             |           4.88 |
-| age_diff            |           4.21 |
-| bp_diff             |           4.13 |
-| df_diff             |           3.86 |
-| h2h_diff            |           3.22 |
-| tourney_level       |           3.17 |
-| surface             |           2.81 |
-| round               |           2.74 |
-| ace_diff            |           2.61 |
+| points_diff         |          43.8 |
+| surface_elo_diff    |           9.5 |
+| rank_diff           |           7.3 |
+| best_of             |           6.2 |
+| opponent_elo_before |           5.1 |
+| player_elo_before   |           5.0 |
+| age_diff            |           4.6 |
+| bp_diff             |           4.2 |
+| df_diff             |           3.8 |
+| ace_diff            |           3.6 |
+| h2h_diff            |           3.6 |
+| match_importance    |           3.4 |
 
 ---
 
