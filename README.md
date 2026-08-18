@@ -123,6 +123,20 @@ Outputs:
 - Confusion matrices and ROC curves  
 - Feature importance rankings
 
+### Score upcoming matches
+
+Turn the committed Elo tables into a probability sheet for real upcoming ATP
+fixtures (fetched from the [Live Tennis API](https://livetennisapi.com) — free
+keyed tier, one request per run; script contributed by that API's team,
+disclosed in its docstring):
+```bash
+export LIVETENNIS_API_KEY=...   # free: https://livetennisapi.com/subscribe/free
+python src/predict_upcoming.py
+```
+Writes `data/testing/upcoming_predictions.csv` with surface-aware Elo win
+probabilities; fixtures whose players aren't in the Elo tables are counted and
+reported, never silently dropped.
+
 ---
 
 ## Results & Metrics
